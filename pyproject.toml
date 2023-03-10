@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "autohw"
+version = "0.1.0"
+description = ""
+authors = ["Gabriel"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.9"
+kivy = "^2.1.0"
+kivymd = "^1.1.1"
+kaki = "^0.1.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
