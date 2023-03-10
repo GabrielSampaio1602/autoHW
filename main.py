@@ -108,7 +108,7 @@ class MainApp(App, MDApp):
             if f"{screen_module_in_str}." in full_kv_path:
                 screen_pos = full_kv_path.find("screen")
                 path_from_screen_2_file = full_kv_path[screen_pos + 8 : -3]
-                if platform == "windows":
+                if platform == "win":
                     path_2_import = path_from_screen_2_file.replace("\\", ".")
                 elif platform in ["macosx", "linux"]:
                     path_2_import = path_from_screen_2_file.replace("/", ".")
