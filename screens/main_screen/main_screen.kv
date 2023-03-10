@@ -1,0 +1,91 @@
+<MainScreen>
+    name: 'Main Screen'
+    id: loginid
+
+    FloatLayout:
+        id: mainfloat
+        orientation: "vertical"
+        # MDTopAppBar:
+        #    title: "AutoHWApp"
+        #    anchor_title: "center"
+        #    left_action_items: [["menu"]] #arrow-left-thick #arrow-left
+        #    right_action_items: [["dots-vertical"]]
+        #    elevation: 3
+        #    md_bg_color: [.2, .2, .2, 1]
+
+        MDLabel:
+            text: 'AutoHWApp'
+            halign: 'center'
+            font_size: 25
+            bold: True
+            pos_hint: {'center_x': 0.5, 'center_y': 0.8}
+        
+        MDLabel:
+            text: 'Select the account:'
+            font_style: 'Caption'
+            halign: 'center'
+            pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+                    
+        MDRaisedButton:
+            id: accounts_btn
+            text: 'Accounts'
+            text_color: [1, 1, 1, 1]
+            pos_hint: {'center_x': 0.5, 'center_y': 0.55}
+            size_hint_x: .8
+            on_release: root.show_accs() #root.printar() #
+                    
+        #MDRectangleFlatIconButton:
+        #    text: 'Accounts'
+        #    text_color: [0, 0, 0, 1]
+        #    md_bg_color: [0, 0, 0, 0.3]
+        #    icon: 'triangle-small-down'
+        #    pos_hint: {'center_x': 0.5, 'center_y': 1}
+        #    line_color: [0, 0, 0, 1]
+        
+        #MDTextField:
+        #    hint_text: 'E-mail'
+        #    pos_hint: {'center_x': 0.5}
+        #    size_hint_x: .8
+        #    icon_right: 'email'
+        #    icon_right_color: app.theme_cls.primary_color
+        
+        #MDTextField:
+        #    hint_text: 'Password'
+        #    pos_hint: {'center_x': 0.5}
+        #    size_hint_x: .8
+        #    password: True
+        #    icon_right: 'lock'
+        #    icon_right_color: app.theme_cls.primary_color
+                    
+        MDFillRoundFlatIconButton:
+            text: 'Show Logs'
+            text_color: [0, 0, 0, 0.7]
+            md_bg_color: [0.88, 0.8, 0.56, 1]
+            pos_hint: {'center_x': 0.5, 'center_y': 0.3}
+            icon: 'text-box-outline'
+            size_hint_x: .8
+            on_release: root.go_to_logs()
+
+        # ScrollView:
+        #     pos_hint: {'center_x': 0.52, 'top': 0.75}
+        #     size_hint: 0.8, 0.4
+        #     MDBoxLayout:
+        #         orientation: 'vertical'
+        #         spacing: 2
+        #         pos_hint: 0.5, 0.5
+        #         MDRaisedButton:
+        #             text: 'Account 1'
+        #             text_color: [0, 0, 0, 0.7]
+        #             size_hint_x: 0.95
+        #             md_bg_color: [0.8, 0.8, 0.8, 1]
+        #         MDRaisedButton:
+        #             text: 'Account 2'
+        #             text_color: [0, 0, 0, 0.7]
+        #             size_hint_x: 0.95
+        #             md_bg_color: [0.8, 0.8, 0.8, 1]
+        #         MDRaisedButton:
+        #             text: 'Account 3'
+        #             text_color: [0, 0, 0, 0.7]
+        #             size_hint_x: 0.95
+        #             md_bg_color: [0.8, 0.8, 0.8, 1]
+        
