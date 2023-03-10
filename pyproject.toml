@@ -12,6 +12,9 @@ kivymd = "^1.1.1"
 kaki = "^0.1.8"
 
 
+[tool.poetry.group.dev.dependencies]
+black = {version = "^23.1.0", allow-prereleases = true}
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -4,6 +4,7 @@ from kivymd.app import MDApp
 from kivy.lang import Builder
 from kivy.factory import Factory as F
 from kivy.core.window import Window
+from kivy.utils import platform
 
 
 class MyScreenManager(F.ScreenManager):
@@ -65,7 +66,6 @@ class MainApp(App, MDApp):
 
     def build_app(self):
         self.theme_cls.primary_palette = "Gray"
-        Window.size = (270, 580)
         self.screen_manager = MyScreenManager()
 
         # Load the last screen loaded, unless there isn't one, so load Main Screen
@@ -75,6 +75,12 @@ class MainApp(App, MDApp):
             self.actual_screen = screen
         else:
             self.change_screen(self.actual_screen)
+
+        if platform == "macosx":
+            Window._set_window_pos(3540, 100)
+            Window.size = (1312 * 0.2756777, 2460 * 0.296777)
+        else:
+            Window.size = (270, 580)
 
         return self.screen_manager
 
@@ -102,7 +108,11 @@ class MainApp(App, MDApp):
             if f"{screen_module_in_str}." in full_kv_path:
                 screen_pos = full_kv_path.find("screen")
                 path_from_screen_2_file = full_kv_path[screen_pos + 8 : -3]
-                path_2_import = path_from_screen_2_file.replace("\\", ".")
+                if platform == "windows":
+                    path_2_import = path_from_screen_2_file.replace("\\", ".")
+                elif platform in ["macosx", "linux"]:
+                    path_2_import = path_from_screen_2_file.replace("/", ".")
+
                 print(path_2_import)
                 screen_module_in_str = path_2_import
         # print(f'screen_name {screen_name}')
