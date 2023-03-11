@@ -25,26 +25,24 @@
         FloatLayout:
             id: float_layout
 
-            SmartRV:
+            ScrollView:
                 id: scrollview
                 # effect_cls: 'ScrollEffect' # Não rolar mais do que pode
                 # always_overscroll: False # False impede o OverScroll (rolagem maior que o widget)
                 effect_x: ScrollEffect() # Impede o OverScroll no eixo X
-                
-                # MDBoxLayout:
-                #     id: logs_box
-                #     orientation: 'vertical'
-                #     padding: 10
 
-                #     size_hint_x: None
-                #     size_hint_y: None # Primordial para o ScrollView funcionar
-                #     height: self.minimum_height # Primordial para o ScrollView funcionar
-                #     width: 291 + 10 + 10 # Alterar o valor 291 através da função add_log() para ficar da mesma largura do botão/log (self.width) acrescentado // 10 + 10 significam os valores da direita e esquerda do padding
+                MDBoxLayout:
+                    id: logs_box
+                    orientation: 'vertical'
+                    padding: 10
 
-                #     md_bg_color: [0, 0.7, 0.7, 1]
-                
+                    size_hint_x: None
+                    size_hint_y: None # Primordial para o ScrollView funcionar
+                    height: self.minimum_height # Primordial para o ScrollView funcionar
+                    width: 291 + 10 + 10 # Alterar o valor 291 através da função add_log() para ficar da mesma largura do botão/log (self.width) acrescentado // 10 + 10 significam os valores da direita e esquerda do padding
 
-
+                    md_bg_color: [0, 0.7, 0.7, 1]
+            
             MDIconButton:
                 id: filter_button
                 icon: "filter"
@@ -61,58 +59,94 @@
 
                 pos_hint: {"right": 0.95, "y": 0.05}
 
-            # ScrollView:
+            # Filter:
+            #     id: label_2
+            #     text: 'SystemLogs'
+            #     icon: 'abacus'
+                # tamanho_da_fonte: sp(12)
+                # pos_hint: {'center_x': 0.5, 'center_y': 0.3}
+                # on_release: print('bye world')
+                # cor_do_icone: [0, 1, 0 ,1]
+                # cor_do_fundo: [0.3,0.3,0.3,1]
+                # cor_da_fonte: [1,1,1,1]
 
-            #     # MDBoxLayout:
-            #     #     orientation: "vertical"
 
-            #     MDFloatingActionButtonSpeedDial:
-            #         id: floating_button
-            #         callback: self.parent.parent.parent.parent.call #root.call
-            #         data: root.data # self.parent.parent.parent.data
+#:set border_width dp(2)
+#:set _padding dp(10)
+<-Filter>:
+    orientation: 'vertical'
+    size_hint: None, None
+    _width: None
+    #width: (label.texture_size[0] + icon._size[0] if icon._size[0] < dp(50) and icon.icon and label.text else label.texture_size[0] + icon._size[0]+ dp(20)) if not self._width else self._width
+    width: dp(86) #(label.texture_size[0] if icon._size[0] < label.texture_size[0] else icon._size[0]) + 2*_padding
 
-            #         # Personalizando o botão root
-            #         icon: "filter"
-            #         root_button_anim: True
-            #         hint_animation: True
-            #         bg_hint_color: [0.7, 0.7, 0.7, 0] # Invisível
+    _height: None
+    height: (dp(50) if icon._size[1] < dp(50) else icon._size[1]) if not self._height else self._height
 
-            #         # Personalizando o label
-            #         label_radius: 10 # Quanto maior, mais redondo
-            #         label_bg_color: [0.7, 0.7, 0.7, 1]
-
-            FiltersSelection:
-
-<Filter>:
-    md_bg_color: Gray
-    label_radius: 50
-
-    MDIcon:
-
-    Label:
+    #padding: _padding
+    #spacing: dp(10) if icon.icon and label.text else 0
     
+    cor_do_fundo: [1, 1, 1, 1]
+    # line_width: 1.05
+    # line_color: [0, 0, 0, 1]
+    
+    cor_da_fonte: [0.3, 0.3, 0.3, 1]
+    tamanho_da_fonte: sp(12)
+
+    cor_do_icone: [0, 0, 0, 1]
+
+    pos_hint:{"center_x": 0.5} # , 'center_y': 0.5}
+
+    cor_borda: [0,0,0,1]
+
+    canvas.before:
+        # Desenhando a borda
+        Color:
+            rgba: self.cor_borda
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: root.raio_da_borda
+
+        # Desenhando o fundo
+        Color:
+            rgba: root.cor_do_fundo if self.state == 'normal' else [root.cor_do_fundo[0]*.8, root.cor_do_fundo[1]*.8, root.cor_do_fundo[2]*.8, root.cor_do_fundo[3]*1]
+        RoundedRectangle:
+            size: self.width-border_width, self.height-border_width #self.size
+            pos: self.x+border_width/2, self.y+border_width/2 # self.pos
+            radius: root.raio_da_borda
+            # line_width: 1.05
+            # line_color: [0, 0, 0, 1]
+
+    on_release: pass # app.screen_manager.get_screen("Logs Screen").select_filter #print(self.width)#
+        
+    MDIcon:
+        id: icon
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        icon: root.icon
+        theme_text_color: 'Custom'
+        text_color: root.cor_do_icone
+        font_size: sp(30)
+        size_hint: None, None
+        size: self.texture_size
+    Label:
+        id: label
+        text: root.text
+        font_size: root.tamanho_da_fonte
+        color: root.cor_da_fonte
 
 <FiltersSelection>:
     id: filters_selection
     cols: 2
     # rows: 7
-    padding: dp(5)
+    padding: dp(10)
     spacing: dp(5)
-    # adaptive_height: True
 
     pos_hint: {'center_x': 0.5, 'center_y': 0.5}
     size_hint: 0.95, 0.8
 
-    md_bg_color: [1,1,1,0]
+    md_bg_color: [0, 0, 0, 0.7]
     radius: 5
-    
-    
-    # canvas.before:
-    #     Color:
-    #         rgba: [0,0,0,0]
-    #     Rectangle:
-    #         size: self.size
-    #         pos: self.pos
 
 <Log>:
     id: log

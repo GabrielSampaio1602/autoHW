@@ -4,7 +4,8 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.animation import Animation
-from kivy.metrics import sp
+from kivy.metrics import sp, dp
+from kivymd.uix.behaviors import RectangularRippleBehavior
 import os
 
 
@@ -16,6 +17,16 @@ name_file = os.path.basename(__file__)[:-3]
 # load_kv_path(f"{path_screen_2_file}/{name_file}.kv") # Comentado pois estava duplicando os botões no widget logs_box
 
 padding = 10
+
+
+class CustomButton(RectangularRippleBehavior, F.ButtonBehavior, F.BoxLayout):
+    text = F.StringProperty("Botão")
+    tamanho_da_fonte = F.NumericProperty(sp(18))
+    icon = F.StringProperty("")
+    cor_do_fundo = F.ColorProperty([1, 1, 1, 1])
+    cor_da_fonte = F.ColorProperty([0, 0, 0, 1])
+    cor_do_icone = F.ColorProperty([0, 0, 0, 1])
+    raio_da_borda = F.ListProperty([dp(5)])
 
 
 class SmartRV(F.RecycleView):
@@ -117,8 +128,14 @@ class FiltersSelection(F.MDGridLayout):
     pass
 
 
-class Filter(F.Button):
-    pass
+class Filter(RectangularRippleBehavior, F.ButtonBehavior, F.BoxLayout):
+    text = F.StringProperty("Botão")
+    tamanho_da_fonte = F.NumericProperty(sp(18))
+    icon = F.StringProperty("")
+    cor_do_fundo = F.ColorProperty([1, 1, 1, 1])
+    cor_da_fonte = F.ColorProperty([0, 0, 0, 1])
+    cor_do_icone = F.ColorProperty([0, 0, 0, 1])
+    raio_da_borda = F.ListProperty([dp(5)])
 
 
 class LogsScreen(F.MDScreen):
@@ -354,17 +371,22 @@ class LogsScreen(F.MDScreen):
 
             for name in self.data:
                 # Creating the custom button
-                btn = F.MDRectangleFlatIconButton(
+                # btn = F.MDRectangleFlatIconButton(
+                #     text=name,
+                #     text_color=[0.3, 0.3, 0.3, 1],
+                #     font_size=sp(12),
+                #     icon=self.data[name][0],
+                #     icon_color=[0, 0, 0, 1],
+                #     icon_size=sp(30),
+                #     line_width=1.05,
+                #     line_color=[0, 0, 0, 1],
+                #     md_bg_color=[1, 1, 1, 1],
+                #     pos_hint={"center_x": 0.5},
+                #     on_release=self.select_filter,
+                # )
+                btn = Filter(
                     text=name,
-                    text_color=[0.3, 0.3, 0.3, 1],
-                    font_size=sp(12),
                     icon=self.data[name][0],
-                    icon_color=[0, 0, 0, 1],
-                    icon_size=sp(30),
-                    line_width=1.05,
-                    line_color=[0, 0, 0, 1],
-                    md_bg_color=[1, 1, 1, 1],
-                    pos_hint={"center_x": 0.5},
                     on_release=self.select_filter,
                 )
                 # Creating the anchor layout to put and center the button
@@ -373,8 +395,6 @@ class LogsScreen(F.MDScreen):
                 self.filters_screen.add_widget(anchor)
                 # print(self.data[name][0])
 
-            # Set the bg color (was previously transparent to hide from the main LogsScreen)
-            self.filters_screen.md_bg_color = [0, 0, 0, 0.7]
             self.ids.float_layout.add_widget(self.filters_screen)
             self.is_filters_screen_opened = True
 
@@ -391,10 +411,6 @@ class LogsScreen(F.MDScreen):
         float_layout = self.ids.float_layout
         float_layout.remove_widget(self.filters_screen)
         self.is_filters_screen_opened = False
-
-        # Set the bg color transparent, to hide from the main LogsScreen
-        self.filters_screen.md_bg_color = [1, 1, 1, 0]
-        # print("FiltersSelection closed")
 
         animation = Animation(angle=0, duration=0.1)
         animation.start(self.ids.filter_button)
