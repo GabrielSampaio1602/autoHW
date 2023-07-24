@@ -10,6 +10,8 @@ python = "3.10.9"
 kivy = "^2.1.0"
 kivymd = "^1.1.1"
 kaki = "^0.1.8"
+wakeonlan = "^3.0.0"
+trio = "^0.22.1"
 
 
 [tool.poetry.group.dev.dependencies]
