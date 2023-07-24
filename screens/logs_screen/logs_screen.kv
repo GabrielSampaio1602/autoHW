@@ -18,8 +18,10 @@
             specific_text_color: [1, 1, 1, 1]
             elevation: 3
             md_bg_color: [.2, .2, .2, 1] # root.go_back_to_main_screen()
-            left_action_items: [["arrow-left", lambda _: root.add_log()]] # arrow-left-thick arrow-left menu
-            right_action_items: [["pause", lambda x: root.change_autoscroll(x), "Auto-Scroll on/off"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
+            # left_action_items: [["arrow-left", lambda _: root.add_log()]] # arrow-left-thick arrow-left menu
+            left_action_items: [["arrow-left", lambda _: root.go_back_to_main_screen()]] # arrow-left-thick arrow-left menu
+            # right_action_items: [["pause", lambda x: root.change_autoscroll(x), "Auto-Scroll on/off"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
+            right_action_items: [["refresh", lambda x: root.update_current_logs(), "Refresh the logs"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
             pos_hint: {"top": 1}
         
         FloatLayout:
@@ -34,13 +36,13 @@
                 MDBoxLayout:
                     id: logs_box
                     orientation: 'vertical'
-                    padding: 10
+                    padding: dp(10) # NOVO
 
                     size_hint_x: None
                     size_hint_y: None # Primordial para o ScrollView funcionar
                     height: self.minimum_height # Primordial para o ScrollView funcionar
-                    width: 291 + 10 + 10 # Alterar o valor 291 através da função add_log() para ficar da mesma largura do botão/log (self.width) acrescentado // 10 + 10 significam os valores da direita e esquerda do padding
-
+                    width: dp(291) + dp(10) * 2 # Alterar o valor 291 através da função add_log() para ficar da mesma largura do botão/log (self.width) acrescentado // 10 * 2 significam os valores da direita e esquerda do padding
+                    # width ajustado com dp
                     md_bg_color: [0, 0.7, 0.7, 1]
             
             MDIconButton:
@@ -48,6 +50,7 @@
                 icon: "filter"
                 md_bg_color: Gray
                 angle: 0
+                cor_icone: [0, 0, 0, 1]
                 canvas.before:
                     PushMatrix
                     Rotate:
@@ -57,18 +60,89 @@
                     PopMatrix
                 # on_release: root.open_filters() # print('oi')
 
-                pos_hint: {"right": 0.95, "y": 0.05}
+                pos_hint: {"right": 0.95, "y": 0.12}
+                theme_text_color: 'Custom' # Without this line, the next one doesn't work
+                icon_color: self.cor_icone
+            
+            GoTopButton:
+                id: go_top
+                icon: 'chevron-up'
+                md_bg_color: Gray
+                radius: 90, 90
+                pos_hint: {"right": 0.95, "y": 0.91} 
+                on_release: root.go_to_top()
 
-            # Filter:
-            #     id: label_2
-            #     text: 'SystemLogs'
-            #     icon: 'abacus'
-                # tamanho_da_fonte: sp(12)
-                # pos_hint: {'center_x': 0.5, 'center_y': 0.3}
-                # on_release: print('bye world')
-                # cor_do_icone: [0, 1, 0 ,1]
-                # cor_do_fundo: [0.3,0.3,0.3,1]
-                # cor_da_fonte: [1,1,1,1]
+            GoTopButton:
+                id: go_bottom
+                icon: 'chevron-down'
+                md_bg_color: Gray
+                radius: 90, 90
+                pos_hint: {"right": 0.95, "y": 0.03} 
+                on_release: root.go_to_bottom()
+
+            CalendarButton:
+                id: calendar_button_new
+                # text: '[b]07-05[/b]'
+                pos_hint: {"right": 0.95, "y": 0.78} #{"right": 0.95, "y": 0.65}
+
+                icon: 'calendar-blank'
+
+                text_day: '' # '[b]16[/b]' # Para isso funcionar, deve-se habilitar o 'markup' nas configurações da label
+                text_month: '' # '[b]02[/b]' # Para isso funcionar, deve-se habilitar o 'markup' nas configurações da label
+
+                on_release: root.open_calendar() # Usar: 'root' caso a função esteja na classe LogsScreen || 'self' se estiver na CalendarButton
+
+            MDLabel:
+                id: no_logs_label
+                text: ''
+
+                # pos_hint: {'center_y': 0.5} Não funcionou
+                halign: "center"
+                valign: "center"
+                text_color: [0, 0, 0, 0.7]
+                        
+<LoadingPopup>:
+    orientation: 'vertical'
+    pos_hint: {'x': 1/4, 'y': 2/5} # 'x', 'y', 'top', 'bottom', 'left', 'right', 'center_x'
+
+    size_hint: None, None
+    # _padding: '10dp'
+    # width: (dp(100) if loading_label.size[0] < dp(100) else icon.size[0] + _padding * 2)
+    width: '150dp'
+    height: '86dp'
+    # size: '100dp', '86dp'
+    padding: dp(10)
+
+    canvas:
+        Color:
+            rgba: [0.95, 0.95, 0.95, 1]
+        RoundedRectangle:
+            # size: self.minimum_width * 2, self.minimum_height * 2
+            size: self.size
+            pos: self.pos
+            radius: [5]
+
+    MDIcon:
+        id: loading_icon
+        icon: 'loading'
+        pos_hint: {'center_x': 0.5, 'y': 1} # 'x', 'y', 'top', 'bottom', 'left', 'right', 'center_x'
+        
+        font_size: dp(48)
+        color: [.5, .5, .5, 1]
+        angle: 0
+        canvas.before:
+            PushMatrix
+            Rotate:
+                angle: self.angle
+                origin: self.center
+        canvas.after:
+            PopMatrix
+    
+    Label:
+        id: loading_label
+        text: 'Time elapsed: 00:00.000'
+        font_size: sp(12)
+        color: [0, 0, 0, 1]
 
 
 #:set border_width dp(2)
@@ -148,22 +222,145 @@
     md_bg_color: [0, 0, 0, 0.7]
     radius: 5
 
+# <DateBoxLayout>:
+#     id: filters_selection
+#     padding: dp(10)
+#     spacing: dp(5)
+
+#     pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+#     size_hint: 0.95, 0.8
+
+#     md_bg_color: [0, 0, 0, 0.7]
+#     radius: 5
+
 <Log>:
     id: log
 
     size_hint_x: None
     size_hint_y: None
-    height: 40
+    height: dp(40) # Ajustado
 
     MDRaisedButton:
         id: log_btn
         text: ''
         text_color: [1, 1, 1, 1]
-        font_size: 14
+        font_size: dp(14) # Ajustado
         halign: 'left'
 
         pos_hint: {"left": 1}
         size_hint_x: None
 
-        on_release: app.screen_manager.get_screen("Logs Screen").add_log()
-    
+        on_release: pass # app.screen_manager.get_screen("Logs Screen").add_log('oi', 'teste')
+
+<CalendarButton>:
+	size_hint: None, None
+	width: dp(50)
+	height: dp(50)
+
+	cor_do_fundo: [0.7, 0.7, 0.7, 1]
+	cor_da_fonte: [0, 0, 0, 0.9]
+	tamanho_da_fonte: sp(10)
+	tamanho_da_fonte_day: sp(14)
+	tamanho_da_fonte_month: sp(14)
+
+	cor_do_icone: [0, 0, 0, 1]
+
+	pos_hint: {"center_x": 0.5}
+
+	cor_borda: [0,0,0,0]
+
+	canvas.before:
+        Color:
+            rgba: self.cor_borda
+        RoundedRectangle:
+			size: self.size
+			pos: self.pos
+			radius: root.raio_da_borda
+	
+		# Desenhando o fundo
+		Color:
+			rgba: root.cor_do_fundo if self.state == 'normal' else [root.cor_do_fundo[0]*.8, root.cor_do_fundo[1]*.8, root.cor_do_fundo[2]*.8, root.cor_do_fundo[3]*1]
+		RoundedRectangle:
+			size: self.width-border_width, self.height-border_width
+			pos: self.x+border_width/2, self.y+border_width/2
+			radius: root.raio_da_borda
+
+	on_release: pass
+
+	MDIcon:
+		id: icon
+		pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        icon: root.icon
+        theme_text_color: 'Custom'
+        text_color: root.cor_do_icone
+        font_size: sp(60)
+        size_hint: None, None
+        size: self.texture_size
+	Label:
+        id: label
+        pos_hint: {'center_x': 0.52, 'center_y': 0.4}
+        text: root.text
+        markup: True
+        font_size: root.tamanho_da_fonte
+		color: root.cor_da_fonte
+	Label:
+        id: label-day
+        pos_hint: {'center_x': 0.35, 'center_y': 0.53}
+        text: root.text_day
+        # markup: True
+        bold: True
+        font_size: root.tamanho_da_fonte_day
+		color: root.cor_da_fonte
+	Label:
+        id: label-month
+        pos_hint: {'center_x': 0.65, 'center_y': 0.3}
+        text: root.text_month
+        # markup: True
+        bold: True
+        font_size: root.tamanho_da_fonte_month
+		color: root.cor_da_fonte
+
+<GoTopButton>:
+	size_hint: None, None
+	width: dp(30)
+	height: dp(30)
+
+	cor_do_fundo: [0.7, 0.7, 0.7, 1]
+	cor_da_fonte: [0, 0, 0, 0.9]
+
+	cor_do_icone: [0, 0, 0, 1]
+
+	pos_hint: {"center_x": 0.5, "y": 0.1}
+
+	cor_borda: [0,0,0,0]
+
+    # raio_da_borda: [90]
+
+	canvas.before:
+        Color:
+            rgba: self.cor_borda
+        RoundedRectangle:
+			size: self.size
+			pos: self.pos
+			radius: root.raio_da_borda
+	
+		# Desenhando o fundo
+		Color:
+			rgba: root.cor_do_fundo if self.state == 'normal' else [root.cor_do_fundo[0]*.8, root.cor_do_fundo[1]*.8, root.cor_do_fundo[2]*.8, root.cor_do_fundo[3]*1]
+		RoundedRectangle:
+			size: self.width-border_width, self.height-border_width
+			pos: self.x+border_width/2, self.y+border_width/2
+			radius: root.raio_da_borda
+
+	on_release: pass
+
+	MDIcon:
+		id: icon
+		pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        icon: root.icon
+        theme_text_color: 'Custom'
+        text_color: root.cor_do_icone
+        font_size: sp(30)
+        size_hint: None, None
+        size: self.texture_size
+
