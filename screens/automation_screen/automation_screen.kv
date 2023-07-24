@@ -1,0 +1,439 @@
+#:import ScrollEffect kivy.effects.scroll.ScrollEffect
+#:set Green_switch [0, 0.7, 0, 1]
+#:set Red_switch [0.7, 0, 0, 1]
+#:set Gray [0.7, 0.7, 0.7, 1]
+
+<AutomationScreen>:
+    name: "Automation Screen"
+    # md_bg_color: [0.7, 0.7, 0.7, 1] Esse aqui se sobrepoe aos demais widgets
+
+    BoxLayout:
+        id: automation_boxlayout
+        orientation: 'vertical'
+        # bg_color: [0.7, 0.7, 0.7, 1] N~AO FUNCIONA
+        canvas:
+            Color:
+                rgba: 0.7, .7, .7, 1
+            Rectangle:
+                pos:self.pos
+                size: self.size
+
+        MDTopAppBar:
+            id: topbar
+            title: "Configurações"
+            anchor_title: "center"
+            specific_text_color: [1, 1, 1, 1]
+            elevation: 3
+            md_bg_color: [.2, .2, .2, 1] # root.go_back_to_main_screen()
+            # left_action_items: [["arrow-left", lambda _: root.add_log()]] # arrow-left-thick arrow-left menu
+            left_action_items: [["arrow-left", lambda _: root.go_back_to_main_screen()]] # arrow-left-thick arrow-left menu
+            # right_action_items: [["pause", lambda x: root.change_autoscroll(x), "Auto-Scroll on/off"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
+            # right_action_items: [["refresh", lambda x: root.update_current_logs(), "Refresh the logs"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
+            right_action_items: [["cog-outline", lambda x: root.configure_host(), "Configure"]] # dots-vertical
+            pos_hint: {"top": 1}
+        
+        BoxLayout:
+            id: box_layout
+            orientation: 'vertical'
+            bg_color: [0.7, 0.7, 0.7, 1]
+
+            ScrollView:
+                id: scrollview
+                effect_cls: 'ScrollEffect' # Não rolar mais do que pode
+                # always_overscroll: False # False impede o OverScroll (rolagem maior que o widget)
+                # effect_x: ScrollEffect() # Impede o OverScroll no eixo X
+
+                BoxLayout:
+                    id: configs_box
+                    orientation: 'vertical'
+
+                    size_hint_x: 1
+                    size_hint_y: None # Primordial para o ScrollView funcionar
+                    height: self.minimum_height # Primordial para o ScrollView funcionar
+
+                    SectionButton:
+                        id: acc_section_btn
+                        text: 'Accounts'
+                        on_release: root.rotate_icon(self)
+                    
+                    BoxLayout:
+                        id: box_accs
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        opacity: 1
+                        SectionItem:
+                            id: acc1
+                            var_name: 'acc1'
+                            parameter_name: 'GaloDoido'
+                            section: 'Accounts'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: acc2
+                            var_name: 'acc2'
+                            parameter_name: 'Lars'
+                            section: 'Accounts'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: acc3
+                            var_name: 'acc3'
+                            parameter_name: 'CrazyRooster'
+                            section: 'Accounts'
+                            on_release: root.change_status(self)
+
+                    SectionButton:
+                        id: acc_section_btn
+                        text: 'Functions'
+                        on_release: root.rotate_icon(self)
+                    
+                    BoxLayout:
+                        id: box_funcs
+                        orientation: 'vertical'
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        MDRaisedButton:
+                            section: 'Functions'
+                            text: 'Uncheck All'
+                            on_release: root.change_all_status(self)
+                            pos_hint: {'center_x': 0.5}
+                            size_hint_x: 0.6
+                            md_bg_color: [0.6, 0.6, 0.6, 1]
+                            theme_text_color: 'Custom'
+                            text_color: [0, 0, 0, 0.8]
+                            markup: True
+                        SectionItem:
+                            id: func1
+                            var_name: 'func1'
+                            parameter_name: "heros_way_function"
+                            icone: 'highway'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func2
+                            var_name: 'func2'
+                            parameter_name: 'Loja_function'
+                            icone: 'store-outline'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func3
+                            var_name: 'func3'
+                            parameter_name: 'outland_function'
+                            icone: 'rhombus'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func4
+                            var_name: 'func4'
+                            parameter_name: 'Missions_function'
+                            icone: 'clipboard-check-outline'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func5
+                            var_name: 'func5'
+                            parameter_name: 'tower_function'
+                            icone: 'chess-rook'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func6
+                            var_name: 'func6'
+                            parameter_name: 'DailyQuests_function'
+                            icone: 'notebook'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func7
+                            var_name: 'func7'
+                            parameter_name: 'mail_function'
+                            icone: 'email-seal-outline'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func8
+                            var_name: 'func8'
+                            parameter_name: 'airship_function'
+                            icone: 'airballoon-outline'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func9
+                            var_name: 'func9'
+                            parameter_name: 'heroicChest_function'
+                            icone: 'treasure-chest'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func10
+                            var_name: 'func10'
+                            parameter_name: 'ExchangeShop_function'
+                            icone: 'bitcoin'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func11
+                            var_name: 'func11'
+                            parameter_name: 'boxy_function'
+                            icone: 'gift-outline'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+                        SectionItem:
+                            id: func12
+                            var_name: 'func12'
+                            parameter_name: 'Theater_function'
+                            icone: 'ticket-outline'
+                            section: 'Functions'
+                            on_release: root.change_status(self)
+
+                    SectionButton:
+                        # id: wait_before_btn
+                        text: 'Wait Before'
+                        on_release: root.rotate_icon(self)
+                    
+                    BoxLayout:
+                        id: wait_bef_accs
+                        orientation: 'horizontal'
+                        size_hint: 1, None
+                        height: dp(40)
+                        opacity: 1
+                        MDIconButton:
+                            icon: 'minus-thick'
+                            on_release: root.wait_before -= 1 if root.wait_before != 0 else 0
+                        Label:
+                            text: str(root.wait_before) + ' h'
+                            color: [0, 0, 0, 0.7]
+                        MDIconButton:
+                            icon: 'plus-thick'
+                            on_release: root.wait_before += 1 if root.wait_before < 10 else 0
+
+                    SectionButton:
+                        # id: acc_section_btn
+                        text: 'Wait After'
+                        on_release: root.rotate_icon(self)
+                    
+                    BoxLayout:
+                        id: wait_aft_accs
+                        orientation: 'horizontal'
+                        size_hint: 1, None
+                        height: dp(40)
+                        opacity: 1
+                        MDIconButton:
+                            icon: 'minus-thick'
+                            on_release: root.wait_after -= 1 if root.wait_after != 0 else 0
+                        Label:
+                            text: str(root.wait_after) + ' h'
+                            color: [0, 0, 0, 0.7]
+                        MDIconButton:
+                            icon: 'plus-thick'
+                            on_release: root.wait_after += 1 if root.wait_after < 10 else 0
+
+                    SectionButton:
+                        # id: acc_section_btn
+                        text: 'Times to Run'
+                        on_release: root.rotate_icon(self)
+                    
+                    BoxLayout:
+                        id: times_run_accs
+                        orientation: 'horizontal'
+                        size_hint: 1, None
+                        height: dp(40)
+                        opacity: 1
+                        MDIconButton:
+                            icon: 'minus-thick'
+                            on_release: root.times_to_run -= 1 if root.times_to_run != 1 else 0
+                        Label:
+                            text: str(root.times_to_run) + ' x'
+                            color: [0, 0, 0, 0.7]
+                        MDIconButton:
+                            icon: 'plus-thick'
+                            on_release: root.times_to_run += 1 if root.times_to_run < 3 else 0
+
+                    SectionButton:
+                        id: hibernate_btn
+                        text: 'Hibernate'
+                        icon: 'toggle-switch'
+                        cor_do_icone: [0, 0.5, 0, 1]
+                        tamanho_icone: dp(40)
+                        angle: 0
+                        on_release: root.change_hibernate()
+                    
+                    MDRaisedButton:
+                        text: 'Run'
+                        text_color: [1, 1, 1, 1]
+
+                        md_bg_color: [0, 0.5, 0, 1]
+
+                        size_hint: 0.8, 1
+                        height: dp(80)
+
+                        pos_hint: {'center_x': 0.5}
+                        # padding_top: 20
+                        spacing: dp(10)
+
+                        on_release: root.start_automation()
+
+<SectionButton>:
+	size_hint: 1, None
+    height: dp(30)
+
+    text: 'Section'
+
+	cor_do_fundo: [0.95, 0.95, 0.95, 0.7]
+	cor_da_fonte: [0, 0, 0, 0.9]
+    tamanho_da_fonte: dp(15)
+
+	cor_do_icone: [0, 0, 0, 0.9]
+
+	pos_hint: {"left": 0, "y": 0.1}
+
+	cor_borda: [0, 0, 0, 0]
+
+    icon: 'arrow-down-drop-circle-outline'
+    tamanho_icone: dp(20)
+
+    raio_da_borda: [0]
+
+    angle: 180
+
+	canvas.before:
+        Color:
+            rgba: self.cor_borda
+        RoundedRectangle:
+			size: self.size
+			pos: self.pos
+			radius: root.raio_da_borda
+	
+		# Desenhando o fundo
+		Color:
+			rgba: root.cor_do_fundo if self.state == 'normal' else [root.cor_do_fundo[0]*.8, root.cor_do_fundo[1]*.8, root.cor_do_fundo[2]*.8, root.cor_do_fundo[3]*1]
+		RoundedRectangle:
+			size: self.width-border_width, self.height-border_width
+			pos: self.x+border_width/2, self.y+border_width/2
+			radius: root.raio_da_borda
+
+	on_release: pass
+
+	Label:
+        id: label
+        pos_hint: {'left': 0, 'center_y': 0.5}
+        # halign: 'left'
+        # valign: 'middle'
+        text: root.text
+        markup: True
+        font_size: root.tamanho_da_fonte
+		color: root.cor_da_fonte
+
+	MDIcon:
+		pos_hint: {'right': 0.95, 'center_y': 0.5}
+        icon: root.icon
+        theme_text_color: 'Custom'
+        text_color: root.cor_do_icone
+
+        font_size: root.tamanho_icone
+        size_hint: None, None
+        size: self.texture_size
+
+        angle: self.parent.angle
+
+        canvas.before:
+            PushMatrix
+            Rotate:
+                angle: self.angle
+                origin: self.center
+        canvas.after:
+            PopMatrix
+
+# <SectionToggleOn@FloatLayout>:
+#     size_hint: None, None
+#     height: dp(40)
+#     width: dp(40)
+#     MDIcon:
+#         icon: 'toggle-switch'
+#         color: [0, 0.5, 0, 0.9]
+#         font_size: sp(40)
+#         pos_hint: {'center_y': 0}
+#     MDIcon:
+#         icon: 'check-circle-outline'
+#         color: [0, 0.5, 0, 1]
+#         font_size: sp(15)
+#         pos_hint: {'center_y': 0, 'center_x': 0.9}
+
+
+<SectionItem>:
+    size_hint: 1, None
+    height: dp(40)
+    md_bg_color: [0.95, 0.95, 0.95, 0.5]
+    parameter_name: 'Player'
+    icone: 'account'
+    disabled: False # Alterar para True
+    section: ''
+    switch_icon: 'toggle-switch'
+    switch_color: [0, 0.5, 0, 0.9]
+    MDIcon:
+        icon: root.icone
+        pos_hint: {'left': 0.05, 'center_y': 0.5}
+    Label:
+        text: root.parameter_name
+        color: [0, 0, 0, 0.7]
+        pos_hint: {'left': 0.5, 'center_y': 0.5}
+        halign: 'left'
+    MDIcon:
+        id: acc_switch
+        icon: root.switch_icon
+
+        theme_text_color: 'Custom'
+        text_color: root.switch_color
+
+        font_size: dp(35) # sp(35) antes
+        size_hint: None, None
+        size: self.texture_size
+
+        pos_hint: {'center_y': 0.5, 'right': 1}
+    # MDIconButton:
+    #     id: acc_switch
+    #     icon: 'toggle-switch'
+    #     theme_icon_color: 'Custom'
+    #     icon_color: [0, 0.5, 0, 0.9]
+    #     icon_size: sp(35)
+    #     pos_hint: {'center_y': 0.5, 'right': 1}
+
+<HostConfiguration>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: int(self.minimum_height) # "120dp" #  + 40
+    bg_color: [0, 1, 0, 1]
+
+    # Label:
+    #     text:'Altere abaixo as informações'
+
+    MDTextField:
+        id: ip
+        hint_text: "IP"
+        text: root.ip_text
+
+    MDTextField:
+        id: mac
+        hint_text: "MAC"
+        text: root.mac_text
+
+    MDTextField:
+        id: port
+        hint_text: "PORT"
+        text: root.port_text
+
+    MDTextField:
+        id: sv_port
+        hint_text: "SV_PORT"
+        text: root.sv_port_text
+
+    MDTextField:
+        id: exe_path
+        hint_text: "EXE_PATH"
+        text: root.exe_path_text
+
+    MDTextField:
+        id: bd_link
+        hint_text: "BD_LINK"
+        text: root.bd_link_text
