@@ -5,6 +5,26 @@ from kivy.lang import Builder
 from kivy.factory import Factory as F
 from kivy.core.window import Window
 from kivy.utils import platform
+from kivy.config import Config
+import trio
+
+Config.set("kivy", "exit_on_escape", "0")
+
+# Se aparecer a mensagem: '...não pode ser csock.connect((ip_address, port))arregado porque a execução de scripts foi desabilitada neste sistema.'
+# --------------------------------------------------------------------------------------------------------------------
+# https://vshare.com.br/error-execucao-de-scripts-foi-desabilitada-neste-sistema-powershell/
+# Rodar no terminal PowerShell: Set-ExecutionPolicy -Scope CurrentUser
+# E depois: RemoteSigned
+# --------------------------------------------------------------------------------------------------------------------
+# Na realidade ele está tentando buscar o python no seguinte caminho: C:\Users\gabri\.pyenv\pyenv-win\versions\3.10.9
+# Mas esse caminho não existe, pois estou em outro computador
+# O caminho correto é: C:\Users\ADM\.pyenv\pyenv-win\versions\3.10.9
+# Ir em ".venv > pyenv.cfg" e colocar os caminhos corretos
+
+# icons link: https://pictogrammers.com/library/mdi/
+
+# buildozer -v android debug deploy run
+# buildozer android logcat | grep python
 
 
 class MyScreenManager(F.ScreenManager):
@@ -64,13 +84,18 @@ class MainApp(App, MDApp):
 
     actual_screen = None
 
+    def __init__(self, nursery):
+        super().__init__()
+        self.nursery = nursery
+
     def build_app(self):
         self.theme_cls.primary_palette = "Gray"
         self.screen_manager = MyScreenManager()
 
         # Load the last screen loaded, unless there isn't one, so load Main Screen
         if self.actual_screen == None:
-            screen = "Logs Screen"
+            # screen = "Logs Screen"
+            screen = "Main Screen"
             self.change_screen(screen)
             self.actual_screen = screen
         else:
@@ -79,7 +104,7 @@ class MainApp(App, MDApp):
         if platform == "macosx":
             Window._set_window_pos(3540, 100)
             Window.size = (1312 * 0.2756777, 2460 * 0.296777)
-        else:
+        elif platform in ["linux", "win"]:
             Window.size = (270, 580)
 
         return self.screen_manager
@@ -108,13 +133,18 @@ class MainApp(App, MDApp):
             if f"{screen_module_in_str}." in full_kv_path:
                 screen_pos = full_kv_path.find("screen")
                 path_from_screen_2_file = full_kv_path[screen_pos + 8 : -3]
+                print(platform)
                 if platform == "win":
                     path_2_import = path_from_screen_2_file.replace("\\", ".")
                 elif platform in ["macosx", "linux"]:
                     path_2_import = path_from_screen_2_file.replace("/", ".")
-
-                print(path_2_import)
-                screen_module_in_str = path_2_import
+                else:
+                    path_2_import = path_from_screen_2_file.replace("\\", ".").replace(
+                        "/", "."
+                    )
+                print(f"path_from_screen_2_file {path_from_screen_2_file}")
+                print(f"path_2_import {path_2_import}")
+                screen_module_in_str = path_2_import.replace("..", ".")
         # print(f'screen_name {screen_name}')
         # print(f'screen_module_in_str {screen_module_in_str}')
         # GABRIEL: FIM DE ADAPTAÇÃO
@@ -131,4 +161,11 @@ class MainApp(App, MDApp):
 
 
 if __name__ == "__main__":
-    MainApp().run()
+    # MainApp().run()
+    # Start kivy app as an asynchronous task
+    async def main():
+        async with trio.open_nursery() as nursery:
+            await MainApp(nursery).async_run("trio")  # start Kivy
+            nursery.cancel_scope.cancel()
+
+    trio.run(main)
