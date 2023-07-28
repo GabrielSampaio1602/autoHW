@@ -90,7 +90,8 @@
                 text_day: '' # '[b]16[/b]' # Para isso funcionar, deve-se habilitar o 'markup' nas configurações da label
                 text_month: '' # '[b]02[/b]' # Para isso funcionar, deve-se habilitar o 'markup' nas configurações da label
 
-                on_release: root.open_calendar() # Usar: 'root' caso a função esteja na classe LogsScreen || 'self' se estiver na CalendarButton
+                # on_release: root.open_calendar() # Usar: 'root' caso a função esteja na classe LogsScreen || 'self' se estiver na CalendarButton
+                on_release: root.app.nursery.start_soon(root.async_open_calendar) # Usar: 'root' caso a função esteja na classe LogsScreen || 'self' se estiver na CalendarButton
 
             MDLabel:
                 id: no_logs_label
