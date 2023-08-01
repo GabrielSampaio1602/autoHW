@@ -436,11 +436,6 @@ class LogsScreen(F.MDScreen):
         print("Updated!")
         self.close_loading_popup()
 
-    # def update_height(self, instance, *args):
-    #     # Get the actual height of the widget (BoxLayout) after it is redrawn
-    #     height = instance.minimum_height
-    #     return height
-
     def clear_logs_box_widget(self):
         self.ids.recycleview.data = []
         self.current_logs.clear()
@@ -468,11 +463,6 @@ class LogsScreen(F.MDScreen):
             widget.icon = "pause"
             widget.icon_color = [0, 1, 0, 1]  # [0, 0.7, 0, 1]
             self.auto_scroll_on = True
-
-    def printar(self, text):
-        logs_screen = self.app.screen_manager.get_screen("Logs Screen")
-        print(text)
-        # logs_screen.ids.floating_button.on_touch_down()
 
     def call(self, button):
         print("called from", button.icon)
