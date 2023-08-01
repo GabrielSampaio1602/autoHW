@@ -8,7 +8,6 @@ from kivy.metrics import sp, dp
 from kivymd.uix.behaviors import RectangularRippleBehavior
 from kivymd.uix.pickers import MDDatePicker
 import os
-import requests
 from datetime import datetime
 from sensitive_values import BDLINK, MAC, IP, EXE_PATH
 from wakeonlan import send_magic_packet
@@ -31,16 +30,6 @@ name_file = os.path.basename(__file__)[:-3]
 # load_kv_path(f"{path_screen_2_file}/{name_file}.kv") # Comentado pois estava duplicando os botões no widget logs_box
 
 padding = 10
-
-
-class CustomButton(RectangularRippleBehavior, F.ButtonBehavior, F.BoxLayout):
-    text = F.StringProperty("Botão")
-    tamanho_da_fonte = F.NumericProperty(sp(18))
-    icon = F.StringProperty("")
-    cor_do_fundo = F.ColorProperty([1, 1, 1, 1])
-    cor_da_fonte = F.ColorProperty([0, 0, 0, 1])
-    cor_do_icone = F.ColorProperty([0, 0, 0, 1])
-    raio_da_borda = F.ListProperty([dp(5)])
 
 
 class SmartRV(F.RecycleView):
@@ -116,37 +105,6 @@ class RV(F.RecycleView):
         self.data = []
 
 
-class Log(F.BoxLayout):
-    def __init__(self, log_text="", log_class="", **kwargs):
-        super().__init__(**kwargs)
-        self.ids.log_btn.text = log_text
-
-        # Agendar para obter extrair a largura após o botão estar alterado
-        # Clock.schedule_once(self.get_button_width) # Substituído pela função on_kv_post abaixo
-
-    # teste
-    def on_kv_post(self, base_widget):
-        # This method is called after the widget has been added to the UI
-        Clock.schedule_once(self.get_button_width)
-        # Clock.schedule_once(LogsScreen.ids.recycleview.update)
-
-    def get_button_width(self, *args):
-        button = self.ids.log_btn
-        button.ref_texture = True
-        button_width = button.width
-        # Essa função, agendada pelo Clock, printa a largura do log após ser renderizado
-        LogsScreen.btns_widths.append(button_width)
-
-        # Definir a maior largura e margens
-        maior_largura = max(LogsScreen.btns_widths)
-        margens = padding * 2
-
-        # Atribuir a soma desses valores à largura do BoxLayout (logs_box)
-        self.app = App.get_running_app()
-        logscreen = self.app.screen_manager.get_screen("Logs Screen")
-        logscreen.ids.logs_box.width = maior_largura + margens
-
-
 class FiltersSelection(F.MDGridLayout):
     pass
 
@@ -198,33 +156,22 @@ class LoadingPopup(F.BoxLayout):
         self.begin = datetime.now()
 
     def open_nurseries(self, *args):
-        self.app.nursery.start_soon(self.animate_loading)
-        self.app.nursery.start_soon(self.update_elapsed)
+        Clock.schedule_once(self.animate_loading)
+        Clock.schedule_interval(self.animate_loading, 1 / 2)
+        Clock.schedule_interval(self.update_elapsed, 1 / 15)
 
-    def start_animate_loading(self, *args):
-        self.app.nursery.start_soon(self.animate_loading)
-
-    async def animate_loading(self, *args):
-        self.angle -= (
-            360 * 100
-        )  # Aumentando a duração da animação para não ter que ficar se preocupando com ela o tempo todo
-        duration = 0.5 * 100
+    def animate_loading(self, *args):
+        self.angle -= 360
+        duration = 0.5
         animation = Animation(angle=self.angle, duration=duration)
-        animation.bind(on_complete=self.start_animate_loading)
         animation.start(self.ids.loading_icon)
 
-    def start_update_elapsed(self, *args):
-        self.app.nursery.start_soon(self.update_elapsed)
-
-    async def update_elapsed(self, *args):
+    def update_elapsed(self, *args):
         elapsed = str(datetime.now() - self.begin)[2:11]
         self.ids.loading_label.text = f"Time elapsed: {elapsed}"
-        self.start_update_elapsed()
 
 
 class LogsScreen(F.MDScreen):
-    # widths = []  # Lista com as larguras dos botões criados
-    # btns_widths = F.ListProperty([])
     btns_widths = []
     title = F.StringProperty()
     auto_scroll_on = F.BooleanProperty(True)
@@ -421,33 +368,6 @@ class LogsScreen(F.MDScreen):
         except:
             return "GaloDoido"
 
-    def add_log(self, log_text, log_class):
-        self.logscreen = self.app.screen_manager.get_screen("Logs Screen")
-        logs_box = self.ids.logs_box
-        if self.i == 0:
-            self.logscreen.ids.logs_box.clear_widgets()
-        log = Log(
-            log_text,
-            log_class,
-        )
-        self.i += 1
-
-        logs_box.add_widget(log)
-        logs_box.bind(minimum_height=self.update_height)
-
-        recycleview = self.logscreen.ids.recycleview
-        is_time_to_scroll = logs_box.height + log.height > recycleview.height
-
-        if is_time_to_scroll and self.auto_scroll_on:
-            recycleview.scroll_y = 0
-        elif is_time_to_scroll and self.auto_scroll_on == False:
-            altura = log.height
-            tamanho_scroll = self.logscreen.ids.logs_box.height
-            old_pos = ((recycleview.scroll_y * tamanho_scroll) + altura) / (
-                tamanho_scroll + altura
-            )
-            recycleview.scroll_y = old_pos
-
     async def open_loading_popup(self, *args):
         self.angle = 0
         self.loading_popup = LoadingPopup()
@@ -466,75 +386,24 @@ class LogsScreen(F.MDScreen):
         print(f"Updating logs to {self.account} on {self.date}")
         await self.open_loading_popup()
 
-        new_logs = await self.async_get_new_logs()  # tem request async
-        dict_all_logs = self.get_and_organize_logs(new_logs)
+        new_logs = await self.async_get_new_logs()
+        dict_all_logs = self.organize_logs(new_logs)
 
         self.clear_logs_box_widget()
         if dict_all_logs == None:
             self.logscreen.ids.no_logs_label.text = "No logs found"
+            self.close_loading_popup()
             return None
         print(f"before add_logs: {datetime.now()}")
 
-        # # NEW - 1 request for each log - Incredibly slow and DB overrequested
-        # session = asks.Session()
-        # res = await session.get(f"{self.BD_LINK}/Logs/{self.date}/{self.account}.json")
-        # for i, _ in enumerate(res.json()):
-        #     begin = datetime.now()
-        #     log = list(res.json().keys())[i]
-        #     response = await session.get(
-        #         f"{self.BD_LINK}/Logs/{self.date}/{self.account}/{log}/.json"
-        #     )
-        #     response = response.json()
-        #     value = f"[{list(response.keys())[0]}] {list(response.values())[0]}"
-        #     self.add_log(value, self.actual_filter)
-        #     print(datetime.now() - begin)
-
-        # # ATTEMPT WITH 0.5s SLEEPS FOR EVERY 0.4s
-        # begin = datetime.now()
-        # for value in dict_all_logs[self.actual_filter]:
-        #     self.add_log(value, self.actual_filter)
-        #     self.current_logs.append(value)
-        #     print(value)
-        #     elapsed = (datetime.now() - begin).microseconds
-        #     print(elapsed)
-        #     if elapsed > 4000:
-        #         await trio.sleep(0.5)
-        #         begin = datetime.now()
-
-        # # ATTEMPT WITH CLOCK.SCHEDULE every 0.4 seconds - It's delaying only the prints
-        # sleeps = Clock.schedule_interval(self.test_wait, 0.4)
-        # for value in dict_all_logs[self.actual_filter]:
-        #     self.add_log(value, self.actual_filter)
-        #     self.current_logs.append(value)
-        #     print(value)
-        # Clock.unschedule(sleeps)  # sleeps.cancel()
-
-        # ORIGINAL
+        # Adding logs to the RECYCLEVIEW
         for value in dict_all_logs[self.actual_filter]:
-            self.add_log(value, self.actual_filter)
+            self.ids.recycleview.data.append({"text": str(value)})
             self.current_logs.append(value)
-            # print(value)
-            # await trio.sleep(0.5)
+        # await trio.sleep(5)
 
-        # # AFTER FIXING THE RECYCLEVIEW
-        # for value in dict_all_logs[self.actual_filter]:
-        #     self.ids.oi.data.append({"text": str(value)})
-        #     self.current_logs.append(value)
-        #     print(value)
-
-        # print(self.current_logs)
-        await trio.sleep(5)
-
-        print(f"after add_logs: {datetime.now()}")
         self.logscreen.ids.no_logs_label.text = ""
-        print(f"Updated! {datetime.now()}")
         self.close_loading_popup()
-
-    def test_wait(self):
-        self.app.nursery.start_soon(self.async_test_wait)
-
-    async def async_test_wait(self):
-        await trio.sleep(0.5)
 
     def update_current_logs(self, dt=0):
         self.app.nursery.start_soon(self.open_loading_popup)
@@ -542,14 +411,6 @@ class LogsScreen(F.MDScreen):
         print("Updating current logs")
 
     async def async_update_current_logs(self, dt=0):
-        while self.loading_popup == None:
-            print("travado")
-            await trio.sleep(
-                0.1
-            )  # Fundamental to give time to the loading coroutine to start first
-        # running_to_update = requests.get(f"{BDLINK}/Running_Info/.json").json()[
-        #     "running_to"
-        # ]
         session = asks.Session()
         response = await session.get(f"{BDLINK}/Running_Info/.json")
         running_to_update = response.json()["running_to"]
@@ -560,7 +421,7 @@ class LogsScreen(F.MDScreen):
             return
         print(f"Updating logs to {self.account} on {self.date}")
         new_logs = await self.async_get_new_logs()
-        dict_all_logs = self.get_and_organize_logs(new_logs)
+        dict_all_logs = self.organize_logs(new_logs)
         if dict_all_logs == None:
             self.logscreen.ids.no_logs_label.text = "No logs found"
             self.close_loading_popup()
@@ -568,21 +429,20 @@ class LogsScreen(F.MDScreen):
         fresh_current_logs = dict_all_logs[self.actual_filter]
         for fresh_log in fresh_current_logs:
             if fresh_log not in self.current_logs:
-                self.add_log(fresh_log, self.actual_filter)
+                self.ids.recycleview.data.append({"texto": str(fresh_log)})
                 self.current_logs.append(fresh_log)
 
         self.logscreen.ids.no_logs_label.text = ""
         print("Updated!")
         self.close_loading_popup()
 
-    def update_height(self, instance, *args):
-        # Get the actual height of the widget (BoxLayout) after it is redrawn
-        height = instance.minimum_height
-        return height
+    # def update_height(self, instance, *args):
+    #     # Get the actual height of the widget (BoxLayout) after it is redrawn
+    #     height = instance.minimum_height
+    #     return height
 
     def clear_logs_box_widget(self):
-        logscreen = self.app.screen_manager.get_screen("Logs Screen")
-        logscreen.ids.logs_box.clear_widgets()
+        self.ids.recycleview.data = []
         self.current_logs.clear()
 
     def go_back_to_main_screen(self):
@@ -680,10 +540,6 @@ class LogsScreen(F.MDScreen):
         response = await session.get(
             f"{self.BD_LINK}/Logs/{self.date}/{self.account}/.json"
         )
-        # print(self.date)
-        # print(self.account)
-        # print(response)
-        # print(response.json())
         return response.json()
 
     def compare_logs(self, added_logs, actual_logs):
@@ -696,7 +552,7 @@ class LogsScreen(F.MDScreen):
 
         return new_logs
 
-    def get_and_organize_logs(self, logs):
+    def organize_logs(self, logs):
         groups = [
             "HerosWay",
             "Loja",
