@@ -23,26 +23,7 @@
             # right_action_items: [["pause", lambda x: root.change_autoscroll(x), "Auto-Scroll on/off"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
             right_action_items: [["refresh", lambda x: root.update_current_logs(), "Refresh the logs"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
             pos_hint: {"top": 1}
-        # Icon:
-        #     icon_size: dp(42)
-        #     # mode: 'stretch-background' # para o bg ocupar todo o espaço disponível
-        #     mode: 'stretch-icon' # para o icone ocupar todo o espaço disponível
-        #     icon_color: red_300
-        #     bg_color: green_500
-        # CDropDown:
-        #     text: 'Selecione o sexo'
-        #     values: [{'texto': 'Masc', 'viewclass': 'Log'}, {'text': 'Fem'}] * 5
-        #     # viewclass: 'Log3'
-        #     reset_text: True
-        #     pos_hint: {'center_x': 0.5}
-        #     container_position: 'bottom'
-        #     container_height: dp(100)
-        #     # bg_color: sky_300
-        #     container_bg_color: sky_300
-        #     effect_cls: 'DampedScrollEffect'
-        #     container_border_color: black
-        #     container_border_width: dp(2)
-        #     mode: 'rectangle'
+
         FloatLayout:
             id: float_layout
             RV:
@@ -259,13 +240,6 @@
     radius: [dp(5)]
     _height: dp(40)
     # _width: dp(100)
-
-<Log3@Icon>:
-    icon: 'android'
-    bg_color: white
-    icon_color: black
-    mode: 'stretch-background'
-    icon_size: dp(42)
 
 <CalendarButton>:
 	size_hint: None, None
