@@ -7,11 +7,14 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "3.10.9"
-kivy = "^2.1.0"
-kivymd = "^1.1.1"
+kivy = {url = "https://github.com/kivy/Kivy/archive/master.zip"}
+kivymd = {url = "https://github.com/kivymd/KivyMD/archive/master.zip"}
 kaki = "^0.1.8"
 wakeonlan = "^3.0.0"
 trio = "^0.22.1"
+asks = "^3.0.0"
+kivy-widgets = "^0.1.17"
+
 
 
 [tool.poetry.group.dev.dependencies]
