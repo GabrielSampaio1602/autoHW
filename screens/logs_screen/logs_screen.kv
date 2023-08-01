@@ -27,13 +27,16 @@
         FloatLayout:
             id: float_layout
 
-            ScrollView:
-                id: scrollview
+            # ScrollView:
+            # RecycleView:
+            RV:
+                id: recycleview
                 # effect_cls: 'ScrollEffect' # Não rolar mais do que pode
                 # always_overscroll: False # False impede o OverScroll (rolagem maior que o widget)
                 effect_x: ScrollEffect() # Impede o OverScroll no eixo X
 
                 MDBoxLayout:
+                # BoxLayout:
                     id: logs_box
                     orientation: 'vertical'
                     padding: dp(10) # NOVO
@@ -252,6 +255,18 @@
         size_hint_x: None
 
         on_release: pass # app.screen_manager.get_screen("Logs Screen").add_log('oi', 'teste')
+
+    # Button:
+    #     id: log_btn
+    #     text: ''
+    #     text_color: [1, 1, 1, 1]
+    #     font_size: dp(14) # Ajustado
+    #     halign: 'left'
+
+    #     pos_hint: {"left": 1}
+    #     size_hint_x: None
+
+    #     on_release: pass # app.screen_manager.get_screen("Logs Screen").add_log('oi', 'teste')
 
 <CalendarButton>:
 	size_hint: None, None

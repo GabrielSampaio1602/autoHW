@@ -15,9 +15,8 @@ from wakeonlan import send_magic_packet
 from kivy.config import Config
 import trio
 from datetime import datetime
-import time
-import multiprocessing
-import threading
+import asks
+
 
 Config.set("kivy", "exit_on_escape", "0")  # Talvez desnecess'ario
 os.environ["KIVY_EXIT_ON_ESCAPE"] = "0"  # Talvez desnecess'ario
@@ -110,31 +109,40 @@ class SmartRV(F.RecycleView):
             Animation(scroll_x=scroll_x, d=self.scroll_duration).start(self)
 
 
-class Log(F.MDBoxLayout):
+class RV(F.RecycleView):
+    def __init__(self, **kwargs):
+        super(RV, self).__init__(**kwargs)
+        # self.data = [{"text": str(x)} for x in range(100)]
+        self.data = []
+
+
+class Log(F.BoxLayout):
     def __init__(self, log_text="", log_class="", **kwargs):
         super().__init__(**kwargs)
         self.ids.log_btn.text = log_text
-        self.app = App.get_running_app()
 
         # Agendar para obter extrair a largura após o botão estar alterado
+        # Clock.schedule_once(self.get_button_width) # Substituído pela função on_kv_post abaixo
+
+    # teste
+    def on_kv_post(self, base_widget):
+        # This method is called after the widget has been added to the UI
         Clock.schedule_once(self.get_button_width)
+        # Clock.schedule_once(LogsScreen.ids.recycleview.update)
 
     def get_button_width(self, *args):
         button = self.ids.log_btn
         button.ref_texture = True
         button_width = button.width
-        # # Essa função, agendada pelo Clock, printa a largura do log após ser renderizado
-        # print(f"Button width: {button_width}")
-        LogsScreen.widths.append(button_width)
-
-        # print(LogsScreen.widths)
-        # print(max(LogsScreen.widths))
+        # Essa função, agendada pelo Clock, printa a largura do log após ser renderizado
+        LogsScreen.btns_widths.append(button_width)
 
         # Definir a maior largura e margens
-        maior_largura = max(LogsScreen.widths)
+        maior_largura = max(LogsScreen.btns_widths)
         margens = padding * 2
 
         # Atribuir a soma desses valores à largura do BoxLayout (logs_box)
+        self.app = App.get_running_app()
         logscreen = self.app.screen_manager.get_screen("Logs Screen")
         logscreen.ids.logs_box.width = maior_largura + margens
 
@@ -199,12 +207,11 @@ class LoadingPopup(F.BoxLayout):
     async def animate_loading(self, *args):
         self.angle -= (
             360 * 100
-        )  # Aumentando a duraç~ao da animaç~ao para n~ao ter que ficar se preocupando com ela o tempo todo
+        )  # Aumentando a duração da animação para não ter que ficar se preocupando com ela o tempo todo
         duration = 0.5 * 100
         animation = Animation(angle=self.angle, duration=duration)
         animation.bind(on_complete=self.start_animate_loading)
         animation.start(self.ids.loading_icon)
-        await trio.sleep(0.01)
 
     def start_update_elapsed(self, *args):
         self.app.nursery.start_soon(self.update_elapsed)
@@ -216,8 +223,9 @@ class LoadingPopup(F.BoxLayout):
 
 
 class LogsScreen(F.MDScreen):
-    # Definindo lista com as larguras de todos os botões criados
-    widths = []
+    # widths = []  # Lista com as larguras dos botões criados
+    # btns_widths = F.ListProperty([])
+    btns_widths = []
     title = F.StringProperty()
     auto_scroll_on = F.BooleanProperty(True)
     i = 0
@@ -226,13 +234,9 @@ class LogsScreen(F.MDScreen):
     angle = F.NumericProperty(0)
 
     data = F.DictProperty()
-
     last_logs = F.DictProperty()
-
     current_logs = F.ListProperty()
-
     account = F.StringProperty()  # "GaloDoido"
-
     date = F.StringProperty()  # "12-05-23"
 
     BD_LINK = BDLINK
@@ -322,7 +326,6 @@ class LogsScreen(F.MDScreen):
 
         self.actual_filter = "All"
         Clock.schedule_once(self.assign_function)
-        # Clock.schedule_once(self.update_all_logs, 5)
 
         # call update_current_logs every 60 seconds
         Clock.schedule_interval(self.update_current_logs, 60)
@@ -351,8 +354,13 @@ class LogsScreen(F.MDScreen):
             "%m"
         )
 
-    def open_calendar(self):
-        results = requests.get(f"{self.BD_LINK}/Logs/.json").json()
+    async def get_all_logs(self):
+        session = asks.Session()
+        response = await session.get(f"{self.BD_LINK}/Logs/.json")
+        return response.json()
+
+    async def async_open_calendar(self):
+        results = await self.get_all_logs()
         logs_dates = [
             datetime.strptime(date, "%d-%m-%y") for date in list(results.keys())
         ]
@@ -367,27 +375,18 @@ class LogsScreen(F.MDScreen):
             max_date=max_date,
         )
 
-        # Talvez ficará ok no celular sem precisar ajustar aqui
-        # date_dialog.pos_hint = {"center_x": 0.5, "center_y": 0.5}
-        # date_dialog.size_hint = (0.8, 0.8)
-        # print(date_dialog.pos_hint)
-
         date_dialog.bind(on_save=self.get_new_date)
         date_dialog.open()
 
     def go_to_top(self):
-        scrollview = self.app.screen_manager.get_screen("Logs Screen").ids.scrollview
-        scrollview.scroll_y = 1
+        recycleview = self.app.screen_manager.get_screen("Logs Screen").ids.recycleview
+        recycleview.scroll_y = 1
 
     def go_to_bottom(self):
-        scrollview = self.app.screen_manager.get_screen("Logs Screen").ids.scrollview
-        scrollview.scroll_y = 0
+        recycleview = self.app.screen_manager.get_screen("Logs Screen").ids.recycleview
+        recycleview.scroll_y = 0
 
     def get_new_date(self, instance, value, date_range):
-        # print(f"value {value}")
-        # day = datetime.strptime(value, "%d %B, %Y")
-        # month = datetime.strptime(value, "%d %B, %Y")
-
         date = datetime.strftime(value, "%d-%m-%y")
         selected_date = datetime.strptime(date, "%d-%m-%y")
         if selected_date <= datetime.now():
@@ -400,9 +399,9 @@ class LogsScreen(F.MDScreen):
             self.year = datetime.strftime(value, "%Y")
             self.date = date
 
-            self.app.nursery.start_soon(self.update_all_logs)
+            self.update_all_logs()
         else:
-            self.open_calendar()
+            self.app.nursery.start_soon(self.open_calendar)
 
     def change_pause_color(self, dt):
         # self.data = {}
@@ -415,7 +414,6 @@ class LogsScreen(F.MDScreen):
     # Ajustar
     def get_account_name(self):
         try:
-            # self.app = App.get_running_app()
             mainscreen = self.app.screen_manager.get_screen("Main Screen")
             btn = mainscreen.ids.accounts_btn
             text = btn.text
@@ -423,324 +421,148 @@ class LogsScreen(F.MDScreen):
         except:
             return "GaloDoido"
 
-    def get_and_organize_logs_old(self):  # , account, date, BD_LINK
-        logs = requests.get(
-            f"{self.BD_LINK}/Logs/{self.date}/{self.account}/.json"
-        ).json()
-
-        # md-icon and color
-        groups = [
-            "HerosWay",
-            "Loja",
-            "Outland",
-            "MissionsTab",
-            "Tower",
-            "DailyQuests",
-            "Mail",
-            "Airship",
-            "HeroicChest",
-            "Exchange",
-            "Boxy",
-            "Theater",
-            "SystemLogs",
-            "All",
-        ]
-
-        # Dynamically creating a list for each group
-        for group in groups:
-            setattr(self, group, list())
-
-        # Append each log for All and for its the respective group
-        for log in logs:
-            horário = list(logs[log].keys())[0]
-            ação = list(logs[log].values())[0]
-            log = f"[{horário}] {ação}"
-
-            self.All.append(log)
-
-            # Appending each log for its respective group
-            syslog = True
-            for group in groups:
-                if (
-                    group.lower() in ação.replace("'", "").replace(" ", "").lower()
-                    and group != "All"
-                ):
-                    getattr(self, group).append(log)
-                    syslog = False
-
-            # If the log didn't fit in the other groups, put it in the SystemLogs
-            if syslog == True:
-                getattr(self, "SystemLogs").append(log)
-
-        # Creating a dict with [key = group] and [value = group's list]
-        groups_dict = dict()
-        for group in groups:
-            groups_dict[group] = getattr(self, group)
-
-        # for group in groups:
-        #     if "Boxy" in group and group != "Boxy":
-        #         print(group)
-
-        return groups_dict
-
-    # EXCLUIR
-    def add_log_old(self):
-        logscreen = self.app.screen_manager.get_screen("Logs Screen")
-
-        if self.i == 0:
-            logscreen = self.app.screen_manager.get_screen("Logs Screen")
-            logscreen.ids.logs_box.clear_widgets()
-        logs_box = self.ids.logs_box
-        log = Log(
-            f"botão oooooooooooooooooooo {self.i}",
-            "Loja",
-        )
-        self.i += 1
-        logs_box.add_widget(log)
-
-        logs_box.bind(minimum_height=self.update_height)
-
-        scrollview = logscreen.ids.scrollview
-        # Se [altura atual] + [altura botão] > [altura do scrollview]
-        is_time_to_scroll = logs_box.height + log.height > scrollview.height
-
-        if is_time_to_scroll and self.auto_scroll_on:
-            scrollview.scroll_y = 0
-        elif is_time_to_scroll and self.auto_scroll_on == False:
-            # altura = log.height
-            # dist_mantain_position = scrollview.convert_distance_to_scroll(0, altura)[1]
-            # y_final = dist_mantain_position * altura
-            # scrollview.scroll_y = y_final
-            # print(f"altura {y_final}")
-            altura = log.height
-            tamanho_scroll = logscreen.ids.logs_box.height
-            old_pos = ((scrollview.scroll_y * tamanho_scroll) + altura) / (
-                tamanho_scroll + altura
-            )
-            scrollview.scroll_y = old_pos
-
-            # teste
-            # scrollview.do_scroll_y = False
-            # teste
-
-        """altura = log.height
-        tamanho_scroll = logscreen.ids.logs_box.height
-        dist_prop_após_add = altura / (tamanho_scroll)
-        dist_relativ_após_add = (dist_prop_após_add) * (1 - scrollview.scroll_y)
-        # new_pos = scrollview.scroll_y - dist_prop_após_add
-        print(f"tamanho_scroll {tamanho_scroll}")
-        print(f"dist_relativ_após_add {dist_relativ_após_add}")
-        print(f"scrollview.scroll_y {scrollview.scroll_y}")
-        # scrollview.scroll_y += dist_prop_após_add
-        old_pos = ((scrollview.scroll_y * tamanho_scroll) + altura) / (
-            tamanho_scroll + altura
-        )  # * (1 - dist_relativ_após_add)
-        scrollview.scroll_y = old_pos"""
-        # scrollview.scroll_y *= 1 - dist_relativ_após_add
-
-        # # Essa função printa a largura do log antes de renderizá-lo
-        # print(f"log.width {log.width}")
-
-        # print(f"log.get_button_width() {log.get_button_width()}")
-        # print(logscreen.ids.log)
-
-    # EXCLUIR
     def add_log(self, log_text, log_class):
-        logscreen = self.app.screen_manager.get_screen("Logs Screen")
-
-        if self.i == 0:
-            logscreen = self.app.screen_manager.get_screen("Logs Screen")
-            logscreen.ids.logs_box.clear_widgets()
+        self.logscreen = self.app.screen_manager.get_screen("Logs Screen")
         logs_box = self.ids.logs_box
+        if self.i == 0:
+            self.logscreen.ids.logs_box.clear_widgets()
         log = Log(
             log_text,
             log_class,
         )
         self.i += 1
-        logs_box.add_widget(log)
 
+        logs_box.add_widget(log)
         logs_box.bind(minimum_height=self.update_height)
 
-        scrollview = logscreen.ids.scrollview
-        is_time_to_scroll = logs_box.height + log.height > scrollview.height
+        recycleview = self.logscreen.ids.recycleview
+        is_time_to_scroll = logs_box.height + log.height > recycleview.height
 
         if is_time_to_scroll and self.auto_scroll_on:
-            scrollview.scroll_y = 0
+            recycleview.scroll_y = 0
         elif is_time_to_scroll and self.auto_scroll_on == False:
             altura = log.height
-            tamanho_scroll = logscreen.ids.logs_box.height
-            old_pos = ((scrollview.scroll_y * tamanho_scroll) + altura) / (
+            tamanho_scroll = self.logscreen.ids.logs_box.height
+            old_pos = ((recycleview.scroll_y * tamanho_scroll) + altura) / (
                 tamanho_scroll + altura
             )
-            scrollview.scroll_y = old_pos
-
-    def async_add_log(self, log_text, log_class):
-        logscreen = self.app.screen_manager.get_screen("Logs Screen")
-
-        if self.i == 0:
-            logscreen = self.app.screen_manager.get_screen("Logs Screen")
-            logscreen.ids.logs_box.clear_widgets()
-        logs_box = self.ids.logs_box
-        log = Log(
-            log_text,
-            log_class,
-        )
-        self.i += 1
-        logs_box.add_widget(log)
-
-        logs_box.bind(minimum_height=self.update_height)
-
-        scrollview = logscreen.ids.scrollview
-        is_time_to_scroll = logs_box.height + log.height > scrollview.height
-
-        if is_time_to_scroll and self.auto_scroll_on:
-            scrollview.scroll_y = 0
-        elif is_time_to_scroll and self.auto_scroll_on == False:
-            altura = log.height
-            tamanho_scroll = logscreen.ids.logs_box.height
-            old_pos = ((scrollview.scroll_y * tamanho_scroll) + altura) / (
-                tamanho_scroll + altura
-            )
-            scrollview.scroll_y = old_pos
+            recycleview.scroll_y = old_pos
 
     async def open_loading_popup(self, *args):
         self.angle = 0
         self.loading_popup = LoadingPopup()
         self.add_widget(self.loading_popup)
-        # print(dir(App.get_running_app().root))
-        # App.get_running_app().root.ids.float_layout.add_widget(self.loading_popup)
-        # self.icon = self.loading_popup.ids.loading_icon
-        # await trio.sleep(0.001) # Fundamental to give time to the other coroutine to run "simultaneously"
-
-    # EXCLUIR
-    def process_open_loading_popup(self, *args):
-        self.loading_popup = LoadingPopup()
-        self.add_widget(self.loading_popup)
-        # self.icon = self.loading_popup.ids.loading_icon
-        # await trio.sleep(0.001) # Fundamental to give time to the other coroutine to run "simultaneously"
 
     def close_loading_popup(self, *args):
-        self.remove_widget(self.loading_popup)
-        self.loading_popup = None
+        if self.loading_popup != None:
+            self.remove_widget(self.loading_popup)
+            self.loading_popup = None
 
     def update_all_logs(self, dt=0):
         self.angle = 0
-
-        # trio
-        self.app.nursery.start_soon(self.open_loading_popup)
-
-        # # multiprocessing
-        # queue = multiprocessing.Queue()
-        # self.loading_popup_process = multiprocessing.Process(
-        #     target=self.process_open_loading_popup
-        # )
-        # self.loading_popup_process.daemon = True
-        # self.loading_popup_process.start()
-        # self.loading_popup_process.join()
-
-        # # threading - ERRO
-        # thread = threading.Thread(target=self.process_open_loading_popup, daemon=True)
-        # thread.start()
-
-        print(datetime.now())
-        self.app.nursery.start_soon(self.async_update_all_logs)  # RODAR ESSE
-        # update_logs = multiprocessing.Process(target=self.process_update_all_logs)
-        # update_logs.start()
+        self.app.nursery.start_soon(self.async_update_all_logs)
 
     async def async_update_all_logs(self):
         print(f"Updating logs to {self.account} on {self.date}")
-        await trio.sleep(
-            1
-        )  # Fundamental to give time to the loading coroutine to start first
-        dict_all_logs = self.get_and_organize_logs(self.get_new_logs())
+        await self.open_loading_popup()
+
+        new_logs = await self.async_get_new_logs()  # tem request async
+        dict_all_logs = self.get_and_organize_logs(new_logs)
+
         self.clear_logs_box_widget()
         if dict_all_logs == None:
             self.logscreen.ids.no_logs_label.text = "No logs found"
             return None
         print(f"before add_logs: {datetime.now()}")
-        i = 0
-        reset = datetime.now()
-        # print(dict_all_logs[self.actual_filter])
-        # print(len(dict_all_logs[self.actual_filter]))
+
+        # # NEW - 1 request for each log - Incredibly slow and DB overrequested
+        # session = asks.Session()
+        # res = await session.get(f"{self.BD_LINK}/Logs/{self.date}/{self.account}.json")
+        # for i, _ in enumerate(res.json()):
+        #     begin = datetime.now()
+        #     log = list(res.json().keys())[i]
+        #     response = await session.get(
+        #         f"{self.BD_LINK}/Logs/{self.date}/{self.account}/{log}/.json"
+        #     )
+        #     response = response.json()
+        #     value = f"[{list(response.keys())[0]}] {list(response.values())[0]}"
+        #     self.add_log(value, self.actual_filter)
+        #     print(datetime.now() - begin)
+
+        # # ATTEMPT WITH 0.5s SLEEPS FOR EVERY 0.4s
+        # begin = datetime.now()
+        # for value in dict_all_logs[self.actual_filter]:
+        #     self.add_log(value, self.actual_filter)
+        #     self.current_logs.append(value)
+        #     print(value)
+        #     elapsed = (datetime.now() - begin).microseconds
+        #     print(elapsed)
+        #     if elapsed > 4000:
+        #         await trio.sleep(0.5)
+        #         begin = datetime.now()
+
+        # # ATTEMPT WITH CLOCK.SCHEDULE every 0.4 seconds - It's delaying only the prints
+        # sleeps = Clock.schedule_interval(self.test_wait, 0.4)
+        # for value in dict_all_logs[self.actual_filter]:
+        #     self.add_log(value, self.actual_filter)
+        #     self.current_logs.append(value)
+        #     print(value)
+        # Clock.unschedule(sleeps)  # sleeps.cancel()
+
+        # ORIGINAL
         for value in dict_all_logs[self.actual_filter]:
             self.add_log(value, self.actual_filter)
-            # await self.app.nursery.start_soon(self.async_add_log, value, self.actual_filter)
             self.current_logs.append(value)
+            # print(value)
+            # await trio.sleep(0.5)
 
-            now = datetime.now()
-            # converter de seconds para microseconds
-            if (now - reset).microseconds >= 1000 * 0.5 * 100:
-                await trio.sleep(0.5)
-                reset = datetime.now()
-                # print("aqui")  # 1.000.000
-                # print(now)
+        # # AFTER FIXING THE RECYCLEVIEW
+        # for value in dict_all_logs[self.actual_filter]:
+        #     self.ids.oi.data.append({"text": str(value)})
+        #     self.current_logs.append(value)
+        #     print(value)
 
-            # i += 1
-            # if i == 10:
-            #     await trio.sleep(
-            #         0.001
-            #     )  # Fundamental to give time to the other coroutine to run "simultaneously"
-            #     i = 0
+        # print(self.current_logs)
+        await trio.sleep(5)
 
         print(f"after add_logs: {datetime.now()}")
         self.logscreen.ids.no_logs_label.text = ""
         print(f"Updated! {datetime.now()}")
-        # self.remove_widget(self.loading_popup)
-        # self.loading_popup = None
         self.close_loading_popup()
 
-    # EXCLUIR
-    def process_update_all_logs(self):
-        print(f"Updating logs to {self.account} on {self.date}")
-        dict_all_logs = self.get_and_organize_logs(self.get_new_logs())
-        self.clear_logs_box_widget()
-        if dict_all_logs == None:
-            self.logscreen.ids.no_logs_label.text = "No logs found"
-            return None
-        print(f"before add_logs: {datetime.now()}")
-        i = 0
-        for value in dict_all_logs[self.actual_filter]:
-            self.add_log(value, self.actual_filter)
-            self.current_logs.append(value)
-        print(f"after add_logs: {datetime.now()}")
-        self.logscreen.ids.no_logs_label.text = ""
-        print(f"Updated! {datetime.now()}")
-        # self.remove_widget(self.loading_popup)
-        self.close_loading_popup()
+    def test_wait(self):
+        self.app.nursery.start_soon(self.async_test_wait)
+
+    async def async_test_wait(self):
+        await trio.sleep(0.5)
 
     def update_current_logs(self, dt=0):
-        # self.angle = 0
-        # self.loading_popup = LoadingPopup()
-        # self.add_widget(self.loading_popup)
-        # self.icon = self.loading_popup.ids.loading_icon
         self.app.nursery.start_soon(self.open_loading_popup)
         self.app.nursery.start_soon(self.async_update_current_logs)
         print("Updating current logs")
 
     async def async_update_current_logs(self, dt=0):
-        # print(self.loading_popup)
         while self.loading_popup == None:
-            print('travado')
+            print("travado")
             await trio.sleep(
                 0.1
             )  # Fundamental to give time to the loading coroutine to start first
-        running_to_update = requests.get(f"{BDLINK}/Running_Info/.json").json()[
-            "running_to"
-        ]
+        # running_to_update = requests.get(f"{BDLINK}/Running_Info/.json").json()[
+        #     "running_to"
+        # ]
+        session = asks.Session()
+        response = await session.get(f"{BDLINK}/Running_Info/.json")
+        running_to_update = response.json()["running_to"]
+
         today = datetime.now().strftime("%d-%m-%y")
         if running_to_update != self.account or today != self.date:
-            # self.remove_widget(self.loading_popup)
-            # self.loading_popup = None
             self.close_loading_popup()
             return
         print(f"Updating logs to {self.account} on {self.date}")
-        # time.sleep(5)
-        print("Problema apos aqui")
-        dict_all_logs = self.get_and_organize_logs(self.get_new_logs())
+        new_logs = await self.async_get_new_logs()
+        dict_all_logs = self.get_and_organize_logs(new_logs)
         if dict_all_logs == None:
             self.logscreen.ids.no_logs_label.text = "No logs found"
-            # self.remove_widget(self.loading_popup)
-            # self.loading_popup = None
             self.close_loading_popup()
             return None
         fresh_current_logs = dict_all_logs[self.actual_filter]
@@ -751,8 +573,6 @@ class LogsScreen(F.MDScreen):
 
         self.logscreen.ids.no_logs_label.text = ""
         print("Updated!")
-        # self.remove_widget(self.loading_popup)
-        # self.loading_popup = None
         self.close_loading_popup()
 
     def update_height(self, instance, *args):
@@ -855,10 +675,16 @@ class LogsScreen(F.MDScreen):
         if previous_filter != self.actual_filter:
             self.update_all_logs()
 
-    def get_new_logs(self):
-        return requests.get(
+    async def async_get_new_logs(self):
+        session = asks.Session()
+        response = await session.get(
             f"{self.BD_LINK}/Logs/{self.date}/{self.account}/.json"
-        ).json()
+        )
+        # print(self.date)
+        # print(self.account)
+        # print(response)
+        # print(response.json())
+        return response.json()
 
     def compare_logs(self, added_logs, actual_logs):
         new_logs = dict()
