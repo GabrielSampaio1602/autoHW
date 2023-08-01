@@ -23,30 +23,50 @@
             # right_action_items: [["pause", lambda x: root.change_autoscroll(x), "Auto-Scroll on/off"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
             right_action_items: [["refresh", lambda x: root.update_current_logs(), "Refresh the logs"]] #[["toggle-switch", lambda _: root.add_log()]] # dots-vertical # "toggle-switch"
             pos_hint: {"top": 1}
-        
+        # Icon:
+        #     icon_size: dp(42)
+        #     # mode: 'stretch-background' # para o bg ocupar todo o espaço disponível
+        #     mode: 'stretch-icon' # para o icone ocupar todo o espaço disponível
+        #     icon_color: red_300
+        #     bg_color: green_500
+        # CDropDown:
+        #     text: 'Selecione o sexo'
+        #     values: [{'texto': 'Masc', 'viewclass': 'Log'}, {'text': 'Fem'}] * 5
+        #     # viewclass: 'Log3'
+        #     reset_text: True
+        #     pos_hint: {'center_x': 0.5}
+        #     container_position: 'bottom'
+        #     container_height: dp(100)
+        #     # bg_color: sky_300
+        #     container_bg_color: sky_300
+        #     effect_cls: 'DampedScrollEffect'
+        #     container_border_color: black
+        #     container_border_width: dp(2)
+        #     mode: 'rectangle'
         FloatLayout:
             id: float_layout
-
-            # ScrollView:
-            # RecycleView:
             RV:
                 id: recycleview
                 # effect_cls: 'ScrollEffect' # Não rolar mais do que pode
                 # always_overscroll: False # False impede o OverScroll (rolagem maior que o widget)
                 effect_x: ScrollEffect() # Impede o OverScroll no eixo X
-
-                MDBoxLayout:
-                # BoxLayout:
-                    id: logs_box
+                canvas.before:
+                    Color: 
+                        rgba: [0, 0.7, 0.7, 1]
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                viewclass: 'Log'
+                RecycleBoxLayout:
                     orientation: 'vertical'
-                    padding: dp(10) # NOVO
-
-                    size_hint_x: None
-                    size_hint_y: None # Primordial para o ScrollView funcionar
-                    height: self.minimum_height # Primordial para o ScrollView funcionar
-                    width: dp(291) + dp(10) * 2 # Alterar o valor 291 através da função add_log() para ficar da mesma largura do botão/log (self.width) acrescentado // 10 * 2 significam os valores da direita e esquerda do padding
-                    # width ajustado com dp
-                    md_bg_color: [0, 0.7, 0.7, 1]
+                    padding: dp(10)
+                    spacing: dp(10)
+                    default_size: None, None
+                    default_size_hint: None, None
+                    size_hint_y: None
+                    size_hint_x: None # For the X Scroll
+                    height: self.minimum_height
+                    width: self.minimum_width # For the X Scroll
             
             MDIconButton:
                 id: filter_button
@@ -226,47 +246,26 @@
     md_bg_color: [0, 0, 0, 0.7]
     radius: 5
 
-# <DateBoxLayout>:
-#     id: filters_selection
-#     padding: dp(10)
-#     spacing: dp(5)
+<Log@CButton>:
+    text: ''
+    bg_color: [0.6, 0.6, 0.6, 1] # green_500
+    # icon: 'trash-can'
+    # icon_color: white
+    # icon_size: dp(21)
+    font_color: [1, 1, 1, 1] # slate_200
+    font_size: dp(14)
+    border_color: slate_400 # zinc_400 # black
+    border_width: dp(0.5)
+    radius: [dp(5)]
+    _height: dp(40)
+    # _width: dp(100)
 
-#     pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-#     size_hint: 0.95, 0.8
-
-#     md_bg_color: [0, 0, 0, 0.7]
-#     radius: 5
-
-<Log>:
-    id: log
-
-    size_hint_x: None
-    size_hint_y: None
-    height: dp(40) # Ajustado
-
-    MDRaisedButton:
-        id: log_btn
-        text: ''
-        text_color: [1, 1, 1, 1]
-        font_size: dp(14) # Ajustado
-        halign: 'left'
-
-        pos_hint: {"left": 1}
-        size_hint_x: None
-
-        on_release: pass # app.screen_manager.get_screen("Logs Screen").add_log('oi', 'teste')
-
-    # Button:
-    #     id: log_btn
-    #     text: ''
-    #     text_color: [1, 1, 1, 1]
-    #     font_size: dp(14) # Ajustado
-    #     halign: 'left'
-
-    #     pos_hint: {"left": 1}
-    #     size_hint_x: None
-
-    #     on_release: pass # app.screen_manager.get_screen("Logs Screen").add_log('oi', 'teste')
+<Log3@Icon>:
+    icon: 'android'
+    bg_color: white
+    icon_color: black
+    mode: 'stretch-background'
+    icon_size: dp(42)
 
 <CalendarButton>:
 	size_hint: None, None
