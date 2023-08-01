@@ -19,6 +19,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.config import Config
+import asks
 
 Config.set("kivy", "exit_on_escape", "0")  # Talvez desnecess'ario
 os.environ["KIVY_EXIT_ON_ESCAPE"] = "0"  # Talvez desnecess'ario
@@ -27,12 +28,8 @@ os.environ["KIVY_EXIT_ON_ESCAPE"] = "0"  # Talvez desnecess'ario
 paths_folder = os.path.dirname(__file__)
 inicio_screens = paths_folder.find("screens")
 path_screen_2_file = paths_folder[inicio_screens:]
-# print(path_screen_2_file)
 
 name_file = os.path.basename(__file__)[:-3]
-# print(name_file)
-# print(f"{path_screen_2_file}\\{name_file}.kv")
-# print(os.path.exists(f"{path_screen_2_file}/{name_file}.kv"))
 load_kv_path(f"{path_screen_2_file}/{name_file}.kv".replace("..", "."))
 
 
@@ -72,7 +69,6 @@ class MainScreen(F.MDScreen):
     def key_input(self, window, key, scancode, codepoint, modifier):
         if key in [27, 1001]:
             self.app = App.get_running_app()
-            # print(self.app.screen_manager.current)
             if self.app.screen_manager.current == "Main Screen":
                 self.dialog = MDDialog(
                     text="Do you wanna quit?",
@@ -182,7 +178,7 @@ class MainScreen(F.MDScreen):
         # Get the actual height of the BoxLayout after it is drawn
         height = instance.minimum_height
         self.accounts_bl.height = height
-        self.bl_1.height = height  # NOVO
+        self.bl_1.height = height
         return height
 
     def show_warning_popup(self, message):
@@ -240,14 +236,12 @@ class MainScreen(F.MDScreen):
         self.dialog.dismiss()
 
     def check_automation(self, dt):
-        # win_height = Window.size[1]
-        # print(f"win_height {win_height}")
-        # self.ids.title_label.font_size = int(25 * win_height / 580)
-        # self.ids.title_label.text = str(win_height)
+        self.app.nursery.start_soon(self.async_check_automation)
 
-        running_to_update = requests.get(f"{BDLINK}/Running_Info/.json").json()[
-            "running_to"
-        ]
+    async def async_check_automation(self):
+        session = asks.Session()
+        response = await session.get(f"{BDLINK}/Running_Info/.json")
+        running_to_update = response.json()["running_to"]
         if running_to_update != self.running_to:
             self.mainscreen = App.get_running_app().screen_manager.get_screen(
                 "Main Screen"
@@ -255,15 +249,7 @@ class MainScreen(F.MDScreen):
             self.mainscreen.ids.running_label.text = (
                 f"Currently running automation to\n{running_to_update}"
             )
-            # if running_to_update == "None":
-            #     self.mainscreen.ids.running_label.text_color = [0, 0, 0, 0.5]
-            # else:
-            #     self.mainscreen.ids.running_label.text_color = [0.1, 0.7, 0.1, 1]
             self.mainscreen.ids.running_label.text_color = (
                 [0, 0, 0, 0.3] if running_to_update == "None" else [0.1, 0.7, 0.1, 0.7]
             )
             self.running_to = running_to_update
-
-
-# ValueError: source code string cannot contain null bytes
-# Havia uma linha aqui cheia de caracteres nulos (null) que estava fazendo o programa dar o erro acima
