@@ -7,6 +7,10 @@ from kivy.core.window import Window
 from kivy.utils import platform
 from kivy.config import Config
 import trio
+from kivy_widgets import color_definitions
+from kivy_widgets.buttons import CButton
+from kivy_widgets.icons import Icon
+from kivy_widgets.dropdown import CDropDown
 
 Config.set("kivy", "exit_on_escape", "0")
 
@@ -79,8 +83,8 @@ class MainApp(App, MDApp):
 
         # Load the last screen loaded, unless there isn't one, so load Main Screen
         if self.actual_screen == None:
-            screen = "Logs Screen"
-            # screen = "Main Screen"
+            # screen = "Logs Screen"
+            screen = "Main Screen"
             self.change_screen(screen)
             self.actual_screen = screen
         else:
