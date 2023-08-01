@@ -34,20 +34,6 @@ class MyScreenManager(F.ScreenManager):
 class MainApp(App, MDApp):
     DEBUG = 1
 
-    # INÍCIO: CÓDIGOS ORIGINAIS
-    # AUTORELOADER_PATHS = [
-    #     (os.path.join(os.getcwd(), "main.py"), {"recursive": True}),
-    #     (os.path.join(os.getcwd(), "screens"), {"recursive": True}),
-    # ]
-    #
-    # KV_FILES = {
-    #     os.path.join(os.getcwd(), f"screens/{screen_name}")
-    #     for screen_name in os.listdir("screens")
-    #     if screen_name.endswith(".kv")
-    # }
-    # FIM: CÓDIGOS ORIGINAIS
-
-    # GABRIEL: INÍCIO DE ADAPTAÇÃO
     # Finding other .py folders
     PY_FOLDERS = []
     print(f'os.walk("screens") {os.walk("screens")}')
@@ -80,7 +66,6 @@ class MainApp(App, MDApp):
     print(f"KV_FILES {KV_FILES_LIST}")
 
     KV_FILES = set(KV_FILES_LIST)
-    # GABRIEL: FIM DE ADAPTAÇÃO
 
     actual_screen = None
 
@@ -94,8 +79,8 @@ class MainApp(App, MDApp):
 
         # Load the last screen loaded, unless there isn't one, so load Main Screen
         if self.actual_screen == None:
-            # screen = "Logs Screen"
-            screen = "Main Screen"
+            screen = "Logs Screen"
+            # screen = "Main Screen"
             self.change_screen(screen)
             self.actual_screen = screen
         else:
@@ -125,7 +110,6 @@ class MainApp(App, MDApp):
         screen_module_in_str = "_".join([i.lower() for i in screen_name.split()])
         screen_object_in_str = "".join(screen_name.split())
 
-        # GABRIEL: INÍCIO DE ADAPTAÇÃO
         # Finding the specific path to file to be imported
         print(f"screen_module_in_str {screen_module_in_str}")
         print(f"screen_object_in_str {screen_object_in_str}")
@@ -145,13 +129,8 @@ class MainApp(App, MDApp):
                 print(f"path_from_screen_2_file {path_from_screen_2_file}")
                 print(f"path_2_import {path_2_import}")
                 screen_module_in_str = path_2_import.replace("..", ".")
-        # print(f'screen_name {screen_name}')
-        # print(f'screen_module_in_str {screen_module_in_str}')
-        # GABRIEL: FIM DE ADAPTAÇÃO
 
         # Importing screen object
-        # print(f'screen_module_in_str {screen_module_in_str}')
-        # print(f'screen_object_in_str {screen_object_in_str}')
         exec(f"from screens.{screen_module_in_str} import {screen_object_in_str}")
 
         # Instantiating the object
@@ -161,7 +140,6 @@ class MainApp(App, MDApp):
 
 
 if __name__ == "__main__":
-    # MainApp().run()
     # Start kivy app as an asynchronous task
     async def main():
         async with trio.open_nursery() as nursery:
