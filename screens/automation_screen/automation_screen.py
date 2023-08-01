@@ -14,6 +14,7 @@ from sensitive_values import MAC, IP, PORT, SV_PORT, EXE_PATH, BDLINK, DDNS
 from wakeonlan import send_magic_packet
 import json
 from HWAppTrigger import send_command
+import asks
 
 # icons link: https://pictogrammers.com/library/mdi/
 
@@ -286,24 +287,7 @@ class AutomationScreen(F.MDScreen):
         else:
             btn.text = "Check All"
 
-        # if getattr(self, widget.var_name) == True:
-        #     # Changing value to False (the other ways didn't work)
-        #     setattr(self, widget.var_name, False)
-        #     widget.switch_icon = "toggle-switch-off"
-        #     widget.switch_color = [0.4, 0.4, 0.4, 1]
-        # else:
-        #     setattr(self, widget.var_name, True)
-        #     widget.switch_icon = "toggle-switch"
-        #     widget.switch_color = [0, 0.5, 0, 0.9]
-
     def get_selected_parameters(self):
-        # for var in self.accs_var_list + self.funcs_var_list:
-        #     if "acc" in var.name and var == True:
-        #         name = ""
-        #         self.accounts.append()
-        #     elif "func" in var.name and var == True:
-        #         func = ""
-        #         self.functions.append()
         self.accounts = []
         self.functions = []
 
@@ -317,21 +301,17 @@ class AutomationScreen(F.MDScreen):
                     self.functions.append(item.parameter_name)
 
         if len(self.accounts) == 0:
-            # print("Select at least one account")
             self.dialog = F.MDDialog(
                 text="Select at least one account!",
                 buttons=[F.MDFlatButton(text="OK", on_release=self.dismiss_popup)],
             )
-            # dialog_btn.bind(on_release=dialog.dismiss())
             self.dialog.open()
             return "error"
         elif len(self.functions) == 0:
-            # print("Select at least one function")
             self.dialog = F.MDDialog(
                 text="Select at least one function!",
                 buttons=[F.MDFlatButton(text="OK", on_release=self.dismiss_popup)],
             )
-            # dialog_btn.bind(on_release=dialog.dismiss())
             self.dialog.open()
         else:
             return (
@@ -355,15 +335,19 @@ class AutomationScreen(F.MDScreen):
         self.dialog.open()
 
     def start_automation(self):
-        running_to_update = requests.get(f"{BDLINK}/Running_Info/.json").json()[
-            "running_to"
-        ]
+        self.app.nursery.start_soon(self.async_start_automation)
+
+    async def async_start_automation(self):
+        session = asks.Session()
+        response = await session.get(f"{BDLINK}/Running_Info/.json")
+        running_to_update = response.json()["running_to"]
         if running_to_update == "None":
             # Wake PC on LAN - Mesma rede
             send_magic_packet(self.mac, ip_address=self.ip, port=int(self.port))
             # Wake PC on WAN - Rede externa
             send_magic_packet(self.mac, ip_address=DDNS, port=int(self.port))
             # send_magic_packet(mac,interface=ip)
+            print("Server Awake!")
 
             # Send info to BD
             parameters = self.get_selected_parameters()
@@ -377,7 +361,7 @@ class AutomationScreen(F.MDScreen):
                     times_to_run,
                 ) = parameters
 
-                requests.patch(
+                await session.patch(
                     f"{BDLINK}/Running_Info/.json",
                     data=json.dumps(
                         {
@@ -391,8 +375,7 @@ class AutomationScreen(F.MDScreen):
                         }
                     ),
                 )
-
-                req = contact_server("rodar", self.popup_server_off)
+                req = contact_server(self.app, "rodar", self.popup_server_off)
 
                 # result = req
                 # message = req.text
@@ -433,9 +416,9 @@ class AutomationScreen(F.MDScreen):
         self.dialog.open()
 
     def save(self, *args):
-        # print(self.dialog.content_cls.__dir__())
-        # print(self.dialog.title)
+        self.app.nursery.start_soon(self.async_save)
 
+    async def async_save(self, *args):
         self.ip = self.dialog.content_cls.ids.ip.text
         self.mac = self.dialog.content_cls.ids.mac.text
         self.port = self.dialog.content_cls.ids.port.text
@@ -444,5 +427,27 @@ class AutomationScreen(F.MDScreen):
         self.bd_link = self.dialog.content_cls.ids.bd_link.text
 
         # PATCH INFO ON BD
+        session = asks.Session()
+        await session.patch(
+            f"{BDLINK}/Server_Info/.json",
+            data=json.dumps(
+                {
+                    "MAC": self.mac,
+                    "EXE_PATH": self.exe_path,
+                    "SV_PORT": self.sv_port,
+                    "PORT": self.port,
+                }
+            ),
+        )
+        await session.patch(
+            f"{BDLINK}/Running_Info/.json",
+            data=json.dumps(
+                {
+                    "Server_IP": self.ip,
+                    # "Server_DNS": self.ddns,
+                }
+            ),
+        )
+        print("oi")
 
         self.dismiss_popup(self.dialog)
