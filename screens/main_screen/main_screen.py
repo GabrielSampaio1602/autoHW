@@ -49,30 +49,14 @@ class MainScreen(F.MDScreen):
     def on_enter(self):
         Clock.schedule_once(self.check_automation)
         Clock.schedule_interval(self.check_automation, 5)
-        # win_height = Window.size[1]
-        # print(f"win_height {win_height}")
-        # self.ids.title_label.font_size = int(25 * win_height / 580)
-        # self.ids.title_label.text = str(win_height)
 
         from kivy.base import EventLoop
 
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
 
     def hook_keyboard(self, window, key, *args):
-        # print(key)
-        # print(window)
-        # C'odigo comentado abaixo n~ao funcionou
-        # if (
-        #     key in [27, 1001] and self.app.screen_manager.current == "Main Screen"
-        # ):  # 27 = ESC # 1001 = BACK_ANDROID
-        #     self.app = App.get_running_app()
-        #     previous_screen = self.app.screen_manager.previous()
-        #     print(previous_screen)  # >> Main Screen
-        #     self.app.change_screen(previous_screen, "right")
-        #     return True  # Overwrite the default behavior (default: close window)
         if key in [27, 1001] and self.app.screen_manager.current == "Main Screen":
             self.app = App.get_running_app()
-            # print(self.app.screen_manager.current)
             if self.app.screen_manager.current == "Main Screen":
                 self.dialog = MDDialog(
                     text="Do you wanna quit?",
@@ -84,7 +68,7 @@ class MainScreen(F.MDScreen):
                 self.dialog.open()
             return True
 
-    # Definindo aç~ao ao apertar o ESC/BACK
+    # Definindo ação ao apertar o ESC/BACK
     def key_input(self, window, key, scancode, codepoint, modifier):
         if key in [27, 1001]:
             self.app = App.get_running_app()
@@ -122,19 +106,15 @@ class MainScreen(F.MDScreen):
             # Portanto, para posicionar abaixo do wiget de referencia temos que retirar 1 inteiro + metade dele (pois o POS esta no centro dele)
             pos_bl_1 = int(accs_btn_y - accs_btn_h * 3 / 2)
 
-            print(f"accs_btn_y {accs_btn_y}")  # COMENTAR
-            print(f"accs_btn_h {accs_btn_h}")  # COMENTAR
-            print(f"pos_bl_1 {pos_bl_1}")  # COMENTAR
             self.bl_1 = MDCard(
                 id="accs_bl",
                 md_bg_color=[0, 0, 0, 0.7],
                 orientation="vertical",
-                # pos_hint={"center_x": 0.5, "top": 0.52},
                 pos_hint={"center_x": 0.5},
                 top=pos_bl_1,  # 270
                 size_hint_x=0.8,
                 # size_hint_y=0.21,
-                size_hint_y=None,  # NOVO
+                size_hint_y=None,
             )
             scroll_accounts = ScrollView(
                 pos_hint={"center_x": 0.5},
