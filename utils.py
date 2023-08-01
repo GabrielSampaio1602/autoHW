@@ -15,8 +15,7 @@ def load_kv_path(path):
         Builder.load_file(kv_path)
 
 
-def contact_server(command, func_popup_server_off):
-    app = App.get_running_app()
+def contact_server(app, command, func_popup_server_off):
     app.nursery.start_soon(async_contact_server, command, func_popup_server_off)
 
 
@@ -30,6 +29,7 @@ async def async_contact_server(command, func_popup_server_off):
             requisicao_host = await session.get(f"{BDLINK}/Running_Info/.json")
             host = requisicao_host.json()["Server_DNS"]
             req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
+            print("Command sent to server's DNS!")
         except requests.exceptions.InvalidSchema:
             try:
                 # host = requests.get(f"{BDLINK}/Running_Info/.json").json()["Server_IP"]
@@ -37,8 +37,13 @@ async def async_contact_server(command, func_popup_server_off):
                 requisicao_host = await session.get(f"{BDLINK}/Running_Info/.json")
                 host = requisicao_host.json()["Server_IP"]
                 req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
+                print("Command sent to server's IP!")
             except requests.exceptions.InvalidSchema:
+                print("Server offline!")
                 return func_popup_server_off
         return req
     except:
-        return "Comando enviado, mas sem resposta. Provavelmente funcionou (ou o servidor est'a ocupado rodando uma automaçao)!"
+        print(
+            "Comando enviado, mas sem resposta. Provavelmente funcionou (ou o servidor está ocupado rodando uma automaçao)!"
+        )
+        return "Comando enviado, mas sem resposta. Provavelmente funcionou (ou o servidor está ocupado rodando uma automaçao)!"
