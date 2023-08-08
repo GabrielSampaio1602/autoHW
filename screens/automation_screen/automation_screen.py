@@ -1,4 +1,4 @@
-from utils import load_kv_path, contact_server
+from utils import load_kv_path, contact_server, async_contact_server
 from kivy.factory import Factory as F
 from kivy.app import App
 from kivy.core.window import Window
@@ -8,12 +8,10 @@ from kivy.metrics import sp, dp
 from kivymd.uix.behaviors import RectangularRippleBehavior
 from kivymd.uix.pickers import MDDatePicker
 import os
-import requests
 from datetime import datetime
 from sensitive_values import MAC, IP, PORT, SV_PORT, EXE_PATH, BDLINK, DDNS
 from wakeonlan import send_magic_packet
-import json
-from HWAppTrigger import send_command
+import json  # from HWAppTrigger import send_command
 import asks
 
 # icons link: https://pictogrammers.com/library/mdi/
@@ -375,21 +373,36 @@ class AutomationScreen(F.MDScreen):
                         }
                     ),
                 )
-                req = contact_server(self.app, "rodar", self.popup_server_off)
+                # req = contact_server(self.app, "rodar", self.popup_server_off)
+                req = await async_contact_server("rodar")
+                print(req)
+                if req != None:
+                    result = req
+                    message = req.text
+                    print(result, message)
+                    self.dialog = F.MDDialog(
+                        text=message,
+                        buttons=[
+                            F.MDFlatButton(text="OK", on_release=self.dismiss_popup)
+                        ],
+                    )
+                    self.dialog.open()
+                    # message = req.text
+                    # print(result, message)
+                    # self.dialog = F.MDDialog(
+                    #     text=message,
+                    #     buttons=[
+                    #         F.MDFlatButton(text="OK", on_release=self.dismiss_popup)
+                    #     ],
+                    # )
+                    # self.dialog.open()
 
-                # result = req
-                # message = req.text
-                # print(result, message)
-                # self.dialog = F.MDDialog(
-                #     text=message,
-                #     buttons=[F.MDFlatButton(text="OK", on_release=self.dismiss_popup)],
-                # )
-                # self.dialog.open()
+                    # if result == True:
+                    #     self.app.change_screen("Main Screen", "right")
 
-                # if result == True:
-                #     self.app.change_screen("Main Screen", "right")
-
-                # print(self.get_selected_parameters())
+                    # print(self.get_selected_parameters())
+                else:
+                    self.popup_server_off()
         else:
             self.dialog = F.MDDialog(
                 text=f"The automation is currently running to {running_to_update}.\n\nPlease wait until it's finished!",
