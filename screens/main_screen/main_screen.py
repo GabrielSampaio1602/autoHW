@@ -1,4 +1,4 @@
-from utils import load_kv_path, contact_server
+from utils import load_kv_path, contact_server, async_contact_server
 from kivy.factory import Factory as F
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.button import MDRaisedButton
@@ -11,8 +11,7 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.label import MDLabel
 from kivy.app import App
-import os
-from HWAppTrigger import send_command
+import os  # from HWAppTrigger import send_command
 import requests  # add to buildozer.spec/requests: openssl,hostpython3,urllib3, chardet,certifi,idna and enable INTERNET on Permissions
 from sensitive_values import BDLINK
 from kivy.clock import Clock
@@ -216,14 +215,19 @@ class MainScreen(F.MDScreen):
         # Ex: reference_to_next_screen = self.manager.get_screen("home_screen")
         #     reference_to_next_screen.ids.text_input.text = "new text"
 
+    # def hibernar_pc(self, comando=""):
     def hibernar_pc(self, comando=""):
+        self.app.nursery.start_soon(self.async_hibernar_pc, comando)
+
+    async def async_hibernar_pc(self, comando=""):
         # print(comando)
         # if comando not in ["Hibernar", "Iniciar"]:
         #     açao = "Comando inesperado"
         #     print(açao)
         #     return açao
         # result, message = send_command(comando) # ANTIGO, VIA SOCKET
-        req = contact_server("hibernar", self.popup_server_off)
+        # req = contact_server("hibernar", self.popup_server_off)
+        req = await async_contact_server("hibernar")
         result, message = req, req.text
         print(result, message)
         self.dialog = F.MDDialog(
