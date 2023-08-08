@@ -30,6 +30,14 @@ Config.set("kivy", "exit_on_escape", "0")
 # buildozer -v android debug deploy run
 # buildozer android logcat | grep python
 
+# git pull <link>
+# poetry shell
+# Poetry install
+
+# Se aparecer o problema: "import xxx could not be resolved"
+# verificar se o python interpreter selecionado 'e o correto, referente ao virtual env certo
+# Desinstalar e reinstalar a biblioteca em quest~ao
+
 
 class MyScreenManager(F.ScreenManager):
     pass

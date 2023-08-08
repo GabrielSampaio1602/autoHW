@@ -16,10 +16,13 @@ def load_kv_path(path):
 
 
 def contact_server(app, command, func_popup_server_off):
-    app.nursery.start_soon(async_contact_server, command, func_popup_server_off)
+    res = app.nursery.start_soon(async_contact_server, command, func_popup_server_off)
+    print(res)
+    return res
 
 
-async def async_contact_server(command, func_popup_server_off):
+# async def async_contact_server(command, func_popup_server_off):
+async def async_contact_server(command: str):
     # Send initiate command to server
     session = asks.Session()
     try:
@@ -28,19 +31,26 @@ async def async_contact_server(command, func_popup_server_off):
             # req = requests.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
             requisicao_host = await session.get(f"{BDLINK}/Running_Info/.json")
             host = requisicao_host.json()["Server_DNS"]
-            req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
+            # req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
+            req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=1)
             print("Command sent to server's DNS!")
-        except requests.exceptions.InvalidSchema:
+        # except requests.exceptions.InvalidSchema:
+        except Exception as e:
+            print(e)
             try:
                 # host = requests.get(f"{BDLINK}/Running_Info/.json").json()["Server_IP"]
                 # req = requests.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
                 requisicao_host = await session.get(f"{BDLINK}/Running_Info/.json")
                 host = requisicao_host.json()["Server_IP"]
-                req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
-                print("Command sent to server's IP!")
-            except requests.exceptions.InvalidSchema:
+                # req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=5)
+                req = await session.get(f"http://{host}:{SV_PORT}/{command}", timeout=1)
+                print("Couldn't send to DNS. Command sent to server's IP!")
+            # except requests.exceptions.InvalidSchema:
+            except Exception as e:
+                print(e)
                 print("Server offline!")
-                return func_popup_server_off
+                # return func_popup_server_off
+                return None
         return req
     except:
         print(
