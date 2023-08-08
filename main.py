@@ -21,7 +21,7 @@ Config.set("kivy", "exit_on_escape", "0")
 # E depois: RemoteSigned
 # --------------------------------------------------------------------------------------------------------------------
 # Na realidade ele está tentando buscar o python no seguinte caminho: C:\Users\gabri\.pyenv\pyenv-win\versions\3.10.9
-# Mas esse caminho não existe, pois estou em outro computador
+# Mas esse caminho não ate, pois estou em outro computador
 # O caminho correto é: C:\Users\ADM\.pyenv\pyenv-win\versions\3.10.9
 # Ir em ".venv > pyenv.cfg" e colocar os caminhos corretos
 
@@ -29,6 +29,14 @@ Config.set("kivy", "exit_on_escape", "0")
 
 # buildozer -v android debug deploy run
 # buildozer android logcat | grep python
+
+# git pull <link>
+# poetry shell
+# Poetry install
+
+# Se aparecer o problema: "import xxx could not be resolved"
+# verificar se o python interpreter selecionado 'e o correto, referente ao virtual env certo
+# Desinstalar e reinstalar a biblioteca em quest~ao
 
 
 class MyScreenManager(F.ScreenManager):
