@@ -1,21 +1,21 @@
-from utils import load_kv_path
-from kivy.factory import Factory as F
-from kivy.app import App
-from kivy.core.window import Window
-from kivy.clock import Clock
-from kivy.animation import Animation
-from kivy.metrics import sp, dp
-from kivymd.uix.behaviors import RectangularRippleBehavior
-from kivymd.uix.pickers import MDDatePicker
 import os
 from datetime import datetime
-from sensitive_values import BDLINK, MAC, IP, EXE_PATH
-from wakeonlan import send_magic_packet
-from kivy.config import Config
-import trio
-from datetime import datetime
-import asks
 
+import asks
+import trio
+from kivy.animation import Animation
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.config import Config
+from kivy.core.window import Window
+from kivy.factory import Factory as F
+from kivy.metrics import dp, sp
+from kivymd.uix.behaviors import RectangularRippleBehavior
+from kivymd.uix.pickers import MDDatePicker
+from wakeonlan import send_magic_packet
+
+from sensitive_values import BDLINK, EXE_PATH, IP, MAC
+from utils import create_session, load_kv_path
 
 Config.set("kivy", "exit_on_escape", "0")  # Talvez desnecess'ario
 os.environ["KIVY_EXIT_ON_ESCAPE"] = "0"  # Talvez desnecess'ario
@@ -302,7 +302,8 @@ class LogsScreen(F.MDScreen):
         )
 
     async def get_all_logs(self):
-        session = asks.Session()
+        # session = asks.Session()
+        session = create_session()
         response = await session.get(f"{self.BD_LINK}/Logs/.json")
         return response.json()
 
@@ -411,7 +412,8 @@ class LogsScreen(F.MDScreen):
         print("Updating current logs")
 
     async def async_update_current_logs(self, dt=0):
-        session = asks.Session()
+        # session = asks.Session()
+        session = create_session()
         response = await session.get(f"{BDLINK}/Running_Info/.json")
         running_to_update = response.json()["running_to"]
 
@@ -526,7 +528,8 @@ class LogsScreen(F.MDScreen):
             self.update_all_logs()
 
     async def async_get_new_logs(self):
-        session = asks.Session()
+        # session = asks.Session()
+        session = create_session()
         response = await session.get(
             f"{self.BD_LINK}/Logs/{self.date}/{self.account}/.json"
         )

@@ -19,7 +19,14 @@ asks = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {version = "^23.1.0", allow-prereleases = true}
+isort = "^5.12.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+line_length = 79
+skip = [".buildozer", ".venv"]
+skip_glob = [".buildozer/**", ".venv/**"]
