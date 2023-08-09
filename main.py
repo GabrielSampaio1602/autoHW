@@ -31,8 +31,6 @@ Config.set("kivy", "exit_on_escape", "0")
 # buildozer -v android debug deploy run
 # buildozer android logcat | grep python
 # Adicionar em buildozer.spec > requirements sempre que der erro "module not found"
-# ?Adicionar todos os requirements contidos no seguinte arquivo:?
-#   ?poetry export -f requirements.txt --output requirements.txt?
 
 # git pull <link>
 # poetry shell
