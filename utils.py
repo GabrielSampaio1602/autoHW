@@ -37,7 +37,8 @@ def contact_server(app, command, func_popup_server_off):
 # async def async_contact_server(command, func_popup_server_off):
 async def async_contact_server(command: str):
     # Send initiate command to server
-    session = asks.Session()
+    # session = asks.Session()
+    session = create_session()
     try:
         try:
             # host = requests.get(f"{BDLINK}/Running_Info/.json").json()["Server_DNS"]
