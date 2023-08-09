@@ -1,16 +1,17 @@
 import os
-from kaki.app import App
-from kivymd.app import MDApp
-from kivy.lang import Builder
-from kivy.factory import Factory as F
-from kivy.core.window import Window
-from kivy.utils import platform
-from kivy.config import Config
+
 import trio
+from kaki.app import App
+from kivy.config import Config
+from kivy.core.window import Window
+from kivy.factory import Factory as F
+from kivy.lang import Builder
+from kivy.utils import platform
 from kivy_widgets import color_definitions
 from kivy_widgets.buttons import CButton
-from kivy_widgets.icons import Icon
 from kivy_widgets.dropdown import CDropDown
+from kivy_widgets.icons import Icon
+from kivymd.app import MDApp
 
 Config.set("kivy", "exit_on_escape", "0")
 
@@ -29,6 +30,7 @@ Config.set("kivy", "exit_on_escape", "0")
 
 # buildozer -v android debug deploy run
 # buildozer android logcat | grep python
+# Adicionar em buildozer.spec > requirements sempre que der erro "module not found"
 
 # git pull <link>
 # poetry shell
@@ -158,4 +160,10 @@ if __name__ == "__main__":
             await MainApp(nursery).async_run("trio")  # start Kivy
             nursery.cancel_scope.cancel()
 
-    trio.run(main)
+    try:
+        trio.run(main)
+
+    except Exception as e:
+        print(e)
+        print("App crashed, restarting")
+        raise
