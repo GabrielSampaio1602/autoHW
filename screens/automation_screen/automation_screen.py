@@ -1,18 +1,25 @@
-from utils import load_kv_path, contact_server, async_contact_server
-from kivy.factory import Factory as F
-from kivy.app import App
-from kivy.core.window import Window
-from kivy.clock import Clock
-from kivy.animation import Animation
-from kivy.metrics import sp, dp
-from kivymd.uix.behaviors import RectangularRippleBehavior
-from kivymd.uix.pickers import MDDatePicker
+import json  # from HWAppTrigger import send_command
 import os
 from datetime import datetime
-from sensitive_values import MAC, IP, PORT, SV_PORT, EXE_PATH, BDLINK, DDNS
-from wakeonlan import send_magic_packet
-import json  # from HWAppTrigger import send_command
+
 import asks
+from kivy.animation import Animation
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.factory import Factory as F
+from kivy.metrics import dp, sp
+from kivymd.uix.behaviors import RectangularRippleBehavior
+from kivymd.uix.pickers import MDDatePicker
+from wakeonlan import send_magic_packet
+
+from sensitive_values import BDLINK, DDNS, EXE_PATH, IP, MAC, PORT, SV_PORT
+from utils import (
+    async_contact_server,
+    contact_server,
+    create_session,
+    load_kv_path,
+)
 
 # icons link: https://pictogrammers.com/library/mdi/
 
@@ -336,7 +343,8 @@ class AutomationScreen(F.MDScreen):
         self.app.nursery.start_soon(self.async_start_automation)
 
     async def async_start_automation(self):
-        session = asks.Session()
+        # session = asks.Session()
+        session = create_session()
         response = await session.get(f"{BDLINK}/Running_Info/.json")
         running_to_update = response.json()["running_to"]
         if running_to_update == "None":
@@ -440,7 +448,8 @@ class AutomationScreen(F.MDScreen):
         self.bd_link = self.dialog.content_cls.ids.bd_link.text
 
         # PATCH INFO ON BD
-        session = asks.Session()
+        # session = asks.Session()
+        session = create_session()
         await session.patch(
             f"{BDLINK}/Server_Info/.json",
             data=json.dumps(

@@ -1,24 +1,30 @@
-from utils import load_kv_path, contact_server, async_contact_server
+import os  # from HWAppTrigger import send_command
+
+import asks
+import requests  # add to buildozer.spec/requests: openssl,hostpython3,urllib3, chardet,certifi,idna and enable INTERNET on Permissions
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.config import Config
+from kivy.core.window import Window
 from kivy.factory import Factory as F
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.button import MDRaisedButton
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
+from kivy.metrics import dp
 from kivy.properties import ListProperty
-from kivymd.uix.card import MDCard
+from kivy.uix.scrollview import ScrollView
 from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.button import MDRaisedButton
+from kivymd.uix.card import MDCard
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.label import MDLabel
-from kivy.app import App
-import os  # from HWAppTrigger import send_command
-import requests  # add to buildozer.spec/requests: openssl,hostpython3,urllib3, chardet,certifi,idna and enable INTERNET on Permissions
+from kivymd.uix.screen import MDScreen
+
 from sensitive_values import BDLINK
-from kivy.clock import Clock
-from kivy.core.window import Window
-from kivy.metrics import dp
-from kivy.config import Config
-import asks
+from utils import (
+    async_contact_server,
+    contact_server,
+    create_session,
+    load_kv_path,
+)
 
 Config.set("kivy", "exit_on_escape", "0")  # Talvez desnecess'ario
 os.environ["KIVY_EXIT_ON_ESCAPE"] = "0"  # Talvez desnecess'ario
@@ -228,6 +234,7 @@ class MainScreen(F.MDScreen):
         # result, message = send_command(comando) # ANTIGO, VIA SOCKET
         # req = contact_server("hibernar", self.popup_server_off)
         req = await async_contact_server("hibernar")
+        print(req)
         result, message = req, req.text
         print(result, message)
         self.dialog = F.MDDialog(
@@ -243,7 +250,8 @@ class MainScreen(F.MDScreen):
         self.app.nursery.start_soon(self.async_check_automation)
 
     async def async_check_automation(self):
-        session = asks.Session()
+        # session = asks.Session()
+        session = create_session()
         response = await session.get(f"{BDLINK}/Running_Info/.json")
         running_to_update = response.json()["running_to"]
         if running_to_update != self.running_to:

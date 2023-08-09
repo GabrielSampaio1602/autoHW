@@ -1,9 +1,12 @@
 import os
-from kivy.lang import Builder
-import requests
-from sensitive_values import BDLINK, DDNS, SV_PORT
-from kivy.app import App
+import ssl
+
 import asks
+import certifi
+from kivy.app import App
+from kivy.lang import Builder
+
+from sensitive_values import BDLINK, DDNS, SV_PORT
 
 
 def load_kv_path(path):
@@ -13,6 +16,16 @@ def load_kv_path(path):
     kv_path = os.path.join(os.getcwd(), path)
     if kv_path not in Builder.files:
         Builder.load_file(kv_path)
+
+
+def create_session():
+    """
+    Creates a session
+    """
+    return asks.Session(
+        connections=1,
+        ssl_context=ssl.create_default_context(cafile=certifi.where()),
+    )
 
 
 def contact_server(app, command, func_popup_server_off):
